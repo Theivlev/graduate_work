@@ -1,0 +1,14 @@
+digraph rating_scenario {
+	fontsize=20 label="Сценарий: Пользователь оценил фильм" labelloc=t rankdir=LR
+	step1 [label="1. Пользователь оценивает фильм" shape=box]
+	step2 [label="2. Core Service обновляет профиль" shape=box]
+	step1 -> step2 [label=""]
+	step3 [label="3. Событие отправляется в Kafka" shape=box]
+	step2 -> step3 [label=""]
+	step4 [label="4. ML Engine обрабатывает событие" shape=box]
+	step3 -> step4 [label=""]
+	step5 [label="5. Обновленные рекомендации в Redis" shape=box]
+	step4 -> step5 [label=""]
+	step6 [label="6. Уведомление через WebSocket" shape=box]
+	step5 -> step6 [label=""]
+}

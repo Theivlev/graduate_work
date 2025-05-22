@@ -1,0 +1,87 @@
+version: '3.8'
+
+services:
+  fastapi1:
+    image: alpine
+    stdin_open: true
+    tty: true
+
+  fastapi2:
+    image: alpine
+    stdin_open: true
+    tty: true
+
+  fastapi_auth1:
+    image: alpine
+    stdin_open: true
+    tty: true
+
+  fastapi_auth2:
+    image: alpine
+    stdin_open: true
+    tty: true
+
+  fastapi_ugc:
+    image: alpine
+    stdin_open: true
+    tty: true
+
+  fastapi_ws:
+    image: alpine
+    stdin_open: true
+    tty: true
+
+  fastapi_recom:
+    build:
+      context: ./fastapi_recom
+      dockerfile: Dockerfile
+    container_name: fastapi_recom
+    ports:
+      - "8050:8050"
+    env_file:
+      - .env
+    depends_on:
+      - redis
+      - theatre-db
+
+  redis:
+    image: redislabs/redismod:latest
+    container_name: redis
+    expose:
+      - "6379"
+    restart: always
+    volumes:
+      - redis_data:/data
+
+  theatre-db:
+    image: postgres:16
+    container_name: theatre-db
+    ports:
+      - "5432:5432"
+    env_file:
+      - .env
+    restart: always
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+  nginx:
+    image: nginx:latest
+    container_name: nginx
+    volumes:
+      - /tmp/logs/nginx/:/var/log/nginx/
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./nginx/configs:/etc/nginx/conf.d:ro
+    depends_on:
+      - fastapi_recom
+      - fastapi1
+      - fastapi2
+      - fastapi_auth1
+      - fastapi_auth2
+      - fastapi_ugc
+      - fastapi_ws
+    ports:
+      - "80:80"
+
+volumes:
+  postgres_data:
+  redis_data:

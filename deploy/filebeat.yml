@@ -1,0 +1,40 @@
+filebeat.inputs:
+- type: filestream
+  enabled: true
+  paths:
+    - /var/log/nginx/*
+  json:
+    keys_under_root: true
+    add_error_key:
+  tags: ["nginx"]
+
+- type: filestream
+  enabled: true
+  paths:
+    - /var/log/fastapi/*
+  json:
+    keys_under_root: true
+    add_error_key: true
+  tags: ["fastapi"]
+
+- type: filestream
+  enabled: true
+  paths:
+    - /var/log/fastapi_auth/*
+  json:
+    keys_under_root: true
+    add_error_key:
+  tags: ["fastapi_auth"]
+
+- type: filestream
+  enabled: true
+  paths:
+    - /var/log/flask/*
+  json:
+    keys_under_root: true
+    add_error_key:
+  tags: ["flask"]
+
+output.logstash:
+  enabled: true
+  hosts: ["${LOGSTASH_DSN}"]

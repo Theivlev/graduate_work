@@ -1,0 +1,43 @@
+name: Main pull request
+
+on:
+  pull_request:
+    branches: [main]
+
+jobs:
+  lint:
+    name: Lint
+    uses: "./.github/workflows/lint.yml"
+  type-check:
+    name: Type check
+    uses: "./.github/workflows/type_check.yml"
+  build:
+    name: Build check
+    needs: [lint, type-check]
+    uses: "./.github/workflows/build_check.yml"
+  telegram:
+    name: Send message
+    needs: [build, lint, type-check]
+    if: always()
+    runs-on: ubuntu-latest
+    steps:
+      - name: Get short SHA
+        id: shortsha
+        run: echo "short_sha=${GITHUB_SHA::7}" >> $GITHUB_OUTPUT
+      - name: Send message
+        uses: appleboy/telegram-action@master
+        with:
+          to: ${{ secrets.TELEGRAM_TO }}
+          token: ${{ secrets.TELEGRAM_TOKEN }}
+          format: html
+          message: |
+            📚<b>${{ github.repository }}</b>
+
+            🧷 <a href="${{ github.event.pull_request.html_url }}">${{ github.event.pull_request.title }} #${{ github.event.pull_request.number }}</a>
+            🧑‍💻 ${{ github.actor }}
+            🔨 <a href="https://github.com/${{ github.repository }}/commit/${{github.sha}}">${{ steps.shortsha.outputs.short_sha }}</a>
+
+            <b>Piplines:</b>
+            ${{ needs.lint.result == 'success' && '✅' || '❌' }} - Lint
+            ${{ needs.type-check.result == 'success' && '✅' || '❌' }} - Type
+            ${{ needs.build.result == 'success' && '✅' || '❌' }} - Build

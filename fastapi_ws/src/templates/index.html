@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Чат кинотеатра | {{ username }}</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        .gradient-bg {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+        #messages {
+            scrollbar-width: thin;
+            scrollbar-color: rgba(0,0,0,0.2) transparent;
+        }
+        #messages::-webkit-scrollbar {
+            width: 6px;
+        }
+        #messages::-webkit-scrollbar-thumb {
+            background-color: rgba(0, 0, 0, 0.2);
+            border-radius: 3px;
+        }
+        .admin-badge {
+            background-color: #ef4444;
+            color: white;
+        }
+        .user-badge {
+            background-color: #3b82f6;
+            color: white;
+        }
+        .system-message {
+            background-color: #f3f4f6;
+            color: #6b7280;
+        }
+    </style>
+</head>
+<body class="gradient-bg min-h-screen">
+    <div class="container mx-auto p-4 max-w-3xl">
+        <div class="bg-white rounded-xl shadow-md overflow-hidden">
+            <div class="bg-blue-600 p-4 text-white flex justify-between items-center">
+                <div>
+                    <h2 class="text-xl font-bold">{{ room_id }}</h2>
+                    <div class="flex items-center mt-1">
+                        <span class="text-sm">Вы: {{ username }}</span>
+                        <span class="ml-2 px-2 py-1 text-xs rounded-full {{ 'admin-badge' if role == 'admin' else 'user-badge' }}">
+                            {{ role }}
+                        </span>
+                    </div>
+                </div>
+                <div id="onlineCount" class="bg-blue-700 px-3 py-1 rounded-full text-sm">
+                    1 онлайн
+                </div>
+            </div>
+
+            <div id="messages" class="p-4 h-96 overflow-y-auto space-y-3"></div>
+
+            <div class="p-4 border-t bg-gray-50">
+                <div class="flex space-x-2">
+                    <input id="messageInput"
+                           type="text"
+                           placeholder="Введите сообщение..."
+                           class="flex-1 p-3 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none"
+                           maxlength="500">
+                    <button id="sendButton"
+                            class="bg-blue-600 text-white px-4 py-3 rounded-lg hover:bg-blue-700 transition-colors">
+                        Отправить
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <div id="adminPanel" class="{{ 'block' if role == 'admin' else 'hidden' }}">
+            <div class="bg-blue-600 p-4 text-white">
+                <h3 class="text-lg font-bold">Администрирование</h3>
+            </div>
+            <div class="p-4">
+                <h4 class="font-semibold mb-2">Доступные комнаты:</h4>
+                <div id="roomsList" class="space-y-2 mb-4"></div>
+
+                <div class="pt-4 border-t">
+                    <h4 class="font-semibold mb-2">Создать новую комнату:</h4>
+                    <div class="flex space-x-2">
+                        <input id="newRoomName"
+                               type="text"
+                               placeholder="Название комнаты"
+                               class="flex-1 p-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none"
+                               maxlength="50">
+                        <button id="createRoomBtn"
+                                class="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors">
+                            Создать
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="chat-data"
+         data-room-id="{{ room_id }}"
+         data-user-id="{{ user_id }}"
+         data-username="{{ username }}"
+         data-role="{{ role }}"
+         data-websocket-url="{{ websocket_url }}"
+         style="display: none;">
+    </div>
+
+    <script src="/static/index.js"></script>
+</body>
+</html>

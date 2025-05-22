@@ -1,0 +1,178 @@
+version: '3.8'
+
+services:
+  elasticsearch:
+    image: elasticsearch:8.7.0
+    container_name: elasticsearch
+    restart: always
+    volumes:
+      - elasticsearch:/usr/share/elasticsearch/data
+    environment:
+      - discovery.type=single-node
+      - xpack.security.enabled=false
+      - ES_JAVA_OPTS=-Xms200m -Xmx200m
+    depends_on:
+      - theatre-db
+    ports:
+      - "9200:9200"
+
+  fastapi1:
+    build:
+      context: ./fastapi
+      dockerfile: Dockerfile
+    container_name: searchapi_1
+    ports:
+      - "8080:8080"
+    env_file:
+      - .env
+    depends_on:
+      - redis
+      - theatre-db
+    volumes:
+      - /tmp/logs/fastapi/:/var/log/fastapi/
+
+  fastapi_recom:
+    image: alpine
+    stdin_open: true
+    tty: true
+
+  fastapi_auth1:
+    build:
+      context: ./fastapi_auth
+      dockerfile: Dockerfile
+    container_name: authapi_1
+    command: >
+      bash -c "/opt/app/entrypoint.sh uvicorn src.main:app --reload --host $UVICORN_HOST --port $UVICORN_PORT_AUTH"
+    env_file:
+      - .env
+    depends_on:
+      - redis
+      - theatre-db
+    volumes:
+      - ./fastapi_auth:/opt/app 
+      - /tmp/logs/fastapi_auth/:/var/log/fastapi_auth/
+
+  fastapi_auth2:
+    build:
+      context: ./fastapi_auth
+      dockerfile: Dockerfile
+    container_name: authapi_2
+    command: >
+      bash -c "/opt/app/entrypoint.sh uvicorn src.main:app --reload --host $UVICORN_HOST --port $UVICORN_PORT_AUTH"
+    env_file:
+      - .env
+    depends_on:
+      - redis
+      - theatre-db
+    volumes:  
+      - ./fastapi_auth:/opt/app 
+      - /tmp/logs/fastapi_auth/:/var/log/fastapi_auth/
+
+  fastapi_ugc:
+    build:
+      context: ./fastapi_ugc
+      dockerfile: Dockerfile
+    container_name: ugc
+    env_file:
+      - .env
+    ports:
+      - "8060:8060"
+    restart: unless-stopped
+    depends_on:
+      - ugc_mongo_db
+    volumes:
+      - /tmp/logs/fastapi_ugc/:/var/log/fastapi_ugc/
+
+  fastapi_ws:
+    image: alpine
+    stdin_open: true
+    tty: true
+
+  fastapi2:
+    image: alpine
+    stdin_open: true
+    tty: true
+
+  grpc_auth:
+    build:
+      context: ./fastapi_auth
+      dockerfile: Dockerfile
+    container_name: grpc_auth
+    command: >
+      bash -c "cd /opt/app && python -m src.auth_server.grpc.grpc_server_entrypoint"
+    ports:
+      - "50051:50051"
+    env_file:
+      - .env
+    depends_on:
+      - redis
+      - theatre-db
+    volumes:
+      - ./fastapi_auth:/opt/app
+      - /tmp/logs/fastapi_auth/:/var/log/fastapi_auth/
+
+  rabbitmq:
+    image: rabbitmq:4.0.7-management
+    container_name: rabbitmq
+    ports:
+      - "${RABBITMQ_PORT}:${RABBITMQ_PORT}"
+      - "15672:15672"
+    env_file: .env
+    volumes:
+      - rabbitmq_data:/var/lib/rabbitmq
+    environment:
+      - RABBITMQ_DEFAULT_USER=${RABBITMQ_USER}
+      - RABBITMQ_DEFAULT_PASS=${RABBITMQ_PASSWORD}
+
+  redis:
+    image: redislabs/redismod:latest
+    container_name: redis
+    expose:
+      - "6379"
+    restart: always
+    volumes:
+      - redis_data:/data
+
+  nginx:
+    image: nginx:latest
+    container_name: nginx
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./nginx/configs:/etc/nginx/conf.d:ro
+      - ./fastapi_ws/src/static:/usr/share/nginx/html/static:ro
+    depends_on:
+      - fastapi1
+      - fastapi2
+      - fastapi_auth1
+      - fastapi_auth2
+      - fastapi_ugc
+      - fastapi_ws
+    ports:
+      - "80:80"
+
+  theatre-db:
+    image: postgres:16
+    container_name: theatre-db
+    ports:
+      - "5432:5432"
+    env_file:
+      - .env
+    restart: always
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+  ugc_mongo_db:
+      image: mongo
+      env_file:
+        - .env
+      restart: always
+      volumes:
+        - ./fastapi_ugc/mongo:/docker-entrypoint-initdb.d
+      ports:
+        - "27017:27017"
+
+volumes:
+  postgres_data:
+  redis_data:
+  elasticsearch:
+  rabbitmq_data:
