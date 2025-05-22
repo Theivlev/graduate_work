@@ -1,0 +1,26 @@
+digraph core_service {
+	fontsize=20 label="Участник 1: Ядро рекомендаций и управление профилями" labelloc=t
+	subgraph cluster_core_service_components {
+		color=lightgrey label="Компоненты" style="rounded,filled"
+		api_layer [label="API Layer
+        • POST /recommend
+        • GET /profile/{id}
+        • POST /rate" shape=box]
+		algorithms [label="Алгоритмы
+        • Совместная фильтрация
+        • Основанный на действия польтзователя
+        • Гибридные методы" shape=box]
+		data_layer [label="Data Layer
+        • PostgreSQL
+        • Redis" shape=cylinder]
+	}
+	subgraph cluster_core_service_tech {
+		color=lightblue label="Технологии" style="rounded,filled"
+		FastAPI [label=FastAPI shape=plaintext]
+		gRPC [label=gRPC shape=plaintext]
+		"Python-JWT" [label="Python-JWT" shape=plaintext]
+	}
+	api_layer -> algorithms [label="Запрос рекомендаций" style=solid]
+	algorithms -> data_layer [label="Загрузка данных" style=solid]
+	data_layer -> api_layer [label="Ответ API" style=dashed]
+}

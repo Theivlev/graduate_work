@@ -1,0 +1,12 @@
+digraph search_scenario {
+	fontsize=20 label="Сценарий: Поиск фильмов" labelloc=t rankdir=LR
+	step1 [label="1. Пользователь ищет \"комедии\"" shape=box]
+	step2 [label="2. Analytics Service фиксирует поиск" shape=box]
+	step1 -> step2 [label=""]
+	step3 [label="3. Kafka → ML Engine → Core Service" shape=box]
+	step2 -> step3 [label=""]
+	step4 [label="4. Персонализированные результаты" shape=box]
+	step3 -> step4 [label=""]
+	step5 [label="5. Push-уведомление о новинках" shape=box]
+	step4 -> step5 [label=""]
+}

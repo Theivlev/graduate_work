@@ -1,0 +1,27 @@
+digraph analytics_service {
+	fontsize=20 label="Участник 2: Анализ поведения и сбор событий" labelloc=t
+	subgraph cluster_analytics_service_components {
+		color=lightgrey label="Компоненты" style="rounded,filled"
+		ingestion [label="Сбор данных
+        • REST API
+        • Kafka Consumer" shape=box]
+		processing [label="Обработка
+        • Кластеризация
+        • Анализ временных рядов
+        • Триггеры" shape=box]
+		storage [label="Хранение
+        • MongoDB
+        • ClickHouse
+        • Elasticsearch" shape=cylinder]
+	}
+	subgraph cluster_analytics_service_tech {
+		color=lightblue label="Технологии" style="rounded,filled"
+		FastAPI [label=FastAPI shape=plaintext]
+		Kafka [label=Kafka shape=plaintext]
+		ClickHouse [label=ClickHouse shape=plaintext]
+		MongoDB [label=MongoDB shape=plaintext]
+	}
+	ingestion -> processing [label="Сырые события" style=solid]
+	processing -> storage [label="Аналитика" style=solid]
+	storage -> ingestion [label="Обратная связь" style=dashed]
+}

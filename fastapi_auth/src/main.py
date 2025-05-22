@@ -1,11 +1,11 @@
-import asyncio
 from contextlib import asynccontextmanager
 
-import sentry_sdk
+# import sentry_sdk
 from fastapi.responses import ORJSONResponse
 from opentelemetry.instrumentation.fastapi import FastAPIInstrumentor
 from src.api.routers import main_router
-from src.core.config import jaeger_settings, project_settings, redis_settings, sentry_settings
+from src.core.config import jaeger_settings, project_settings, redis_settings
+# , sentry_settings
 from src.core.jaeger import configure_tracer
 from src.core.logger import request_id_var
 from src.db.init_postgres import create_first_superuser
@@ -15,7 +15,7 @@ from src.db.redis_cache import RedisCacheManager, RedisClientFactory
 
 from fastapi import FastAPI, Request, status
 
-sentry_sdk.init(dsn=sentry_settings.dsn, traces_sample_rate=1.0)
+# sentry_sdk.init(dsn=sentry_settings.dsn, traces_sample_rate=1.0)
 
 
 @asynccontextmanager

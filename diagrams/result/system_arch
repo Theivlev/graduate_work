@@ -1,0 +1,54 @@
+digraph "Рекомендательная система" {
+	rankdir=LR splines=ortho
+	subgraph cluster_core {
+		color=lightgrey label="1. Ядро рекомендаций и управление профилями" style=filled
+		core [label="Core Service
+    • Управление профилями
+    • Гибридные рекомендации
+    • Интеграция с TMDb/IMDb
+    Технологии:
+    FastAPI, PostgreSQL" shape=box]
+	}
+	subgraph cluster_analytics {
+		color=lightblue label="2. Анализ поведения и сбор событий" style=filled
+		analytics [label="Analytics Service
+    • Сбор событий
+    • Кластеризация пользователей
+    • Триггерные события
+    Технологии:
+    Kafka, ClickHouse, Elasticsearch" shape=box]
+	}
+	subgraph cluster_notify {
+		color=lightgreen label="3. Персонализированные уведомления и интерактивный UI" style=filled
+		notify [label="
+    • WebSocket-уведомления
+    • Email/push-рассылки
+    • Локализация
+    Технологии:
+    RabbitMQ, Celery" shape=box]
+	}
+	subgraph cluster_ml {
+		color=lightyellow label="4. ML-движок и контекстные рекомендации" style=filled
+		ml [label="ML Engine
+    • Нейросетевые модели
+    • Контекстные рекомендации
+    • Оптимизация через Optuna
+    Технологии:
+    TensorFlow, PyTorch, MLflow" shape=box]
+	}
+	kafka [label="Kafka
+(шина событий)" shape=cylinder]
+	redis [label="Redis
+(кэш)" shape=cylinder]
+	db [label="PostgreSQL
+(данные)" shape=cylinder]
+	core -> redis [label="Кэш рекомендаций"]
+	core -> db [label="Сохранение рекомендаций"]
+	core -> kafka [label="События оценок"]
+	analytics -> kafka [label="Поток событий" dir=both]
+	analytics -> ml [label="Фичи для ML" style=dashed]
+	ml -> core [label="Обновление моделей"]
+	core -> notify [label="Триггеры уведомлений"]
+	notify -> kafka [label="События кликов"]
+	ml -> kafka [label="Контекстные события"]
+}
