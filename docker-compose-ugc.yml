@@ -72,7 +72,7 @@ services:
     build:
       context: ./fastapi_ugc
       dockerfile: Dockerfile
-    container_name: ugc
+    container_name: fastapi_ugc
     env_file:
       - .env
     ports:

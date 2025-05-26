@@ -34,7 +34,7 @@ async def get_bookmarks_films(
     Получить список фильмов в закладках пользователя.
     """
     ensure_user_owns_resource(user_id, token_payload.user_id, "получить закладки")
-    
+
     try:
         uuid_obj = UUID(user_id)
         page_number, page_size = pagination
@@ -63,7 +63,7 @@ async def add_bookmarks_films(
     token_payload: TokenValidationResult = Security(require_valid_token),
 ):
     ensure_user_owns_resource(bookmark_data.user_id, token_payload.user_id, "добавить закладку")
-    
+
     try:
         new_bookmark = await service.create(bookmark_data.model_dump(by_alias=True))
         return new_bookmark
@@ -83,7 +83,7 @@ async def remove_bookmark(
     token_payload: TokenValidationResult = Security(require_valid_token),
 ):
     ensure_user_owns_resource(bookmark.user_id, token_payload.user_id, "удалить закладку")
-    
+
     try:
         success = await service.delete(str(bookmark.id))
         if not success:
