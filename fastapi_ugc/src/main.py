@@ -35,3 +35,17 @@ app = FastAPI(
 )
 
 app.include_router(main_router)
+
+
+# @app.middleware("http")
+# async def before_request(request: Request, call_next):
+#     request_id = request.headers.get("X-Request-Id")
+#     if not request_id:
+#         return ORJSONResponse(status_code=status.HTTP_400_BAD_REQUEST, content={"detail": "X-Request-Id is required"})
+#     request_id_var.set(request_id)
+#     try:
+#         response = await call_next(request)
+#         response.headers["X-Request-Id"] = request_id
+#         return response
+#     finally:
+#         request_id_var.set(None)

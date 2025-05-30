@@ -1,19 +1,18 @@
-from fastapi import APIRouter, HTTPException, Depends
+import jwt
 from fastapi.responses import RedirectResponse
 from sqlalchemy.ext.asyncio import AsyncSession
-from src.db.postgres import get_async_session
-from src.models.user import User
 from src.core.config import project_settings, redis_settings
+from src.db.postgres import get_async_session
 from src.db.redis_cache import RedisClientFactory
-import jwt
+from src.models.user import User
+
+from fastapi import APIRouter, Depends, HTTPException
 
 router = APIRouter()
 
+
 @router.get("/s/{short_id}")
-async def confirm_email(
-    short_id: str,
-    session: AsyncSession = Depends(get_async_session)
-):
+async def confirm_email(short_id: str, session: AsyncSession = Depends(get_async_session)):
     redis = await RedisClientFactory.create(redis_settings.dsn)
     token = await redis.get(f"email_confirm:{short_id}")
     if not token:

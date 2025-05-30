@@ -21,6 +21,7 @@ async def lifespan(app: FastAPI):
     finally:
         await redis_cache_manager.tear_down()
 
+
 app = FastAPI(
     title=project_settings.name,
     docs_url="/recom/openapi",

@@ -1,5 +1,4 @@
 import aio_pika
-
 from core.config import mail_queue_settings
 
 

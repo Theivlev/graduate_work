@@ -2,8 +2,8 @@ import asyncio
 import logging
 import os
 import re
-import uuid
 import subprocess
+import uuid
 
 from alembic.config import Config
 from redis import asyncio as aioredis

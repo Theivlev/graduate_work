@@ -1,19 +1,19 @@
 from typing import List, Tuple
 from uuid import UUID
 
+from fastapi.params import Security
 from pymongo.errors import DuplicateKeyError
+from src.auth_server.schemas.models import TokenValidationResult
+from src.auth_server.security import require_valid_token
 from src.crud.base import BaseMongoCRUD
 from src.models.bookmark import UserBookmarks
 from src.paginations.pagination import PaginationLimits
 from src.services.bookmarks import get_bookmark_service
 from src.shemas.user_bookmarks import UserBookmarkCreateDTO, UserBookmarkResponse
 from src.utils.check_bookmark import validate_bookmark_exists
-from src.auth_server.schemas.models import TokenValidationResult    
-from src.auth_server.security import require_valid_token
 from src.utils.security import ensure_user_owns_resource
 
 from fastapi import APIRouter, Depends, HTTPException
-from fastapi.params import Security
 
 router = APIRouter()
 

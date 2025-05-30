@@ -5,6 +5,7 @@ from fastapi.responses import ORJSONResponse
 from opentelemetry.instrumentation.fastapi import FastAPIInstrumentor
 from src.api.routers import main_router
 from src.core.config import jaeger_settings, project_settings, redis_settings
+
 # , sentry_settings
 from src.core.jaeger import configure_tracer
 from src.core.logger import request_id_var
@@ -31,6 +32,7 @@ async def lifespan(app: FastAPI):
         yield
     except Exception as e:
         import traceback
+
         traceback.print_exc()
         raise
     finally:

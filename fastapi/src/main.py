@@ -6,6 +6,7 @@ from fastapi.responses import ORJSONResponse
 from opentelemetry.instrumentation.fastapi import FastAPIInstrumentor
 from src.api.routers import main_router
 from src.core.config import elastic_settings, jaeger_settings, project_settings, redis_settings
+
 # , sentry_settings
 from src.core.jaeger import configure_tracer
 from src.core.logger import request_id_var

@@ -1,4 +1,5 @@
 from fastapi_cache.decorator import cache
+
 from fastapi import APIRouter
 
 router = APIRouter()
@@ -11,4 +12,4 @@ router = APIRouter()
 )
 @cache(expire=60)
 async def get_recom():
-    return {'message': 'This is recomandation system'}
+    return {"message": "This is recomandation system"}

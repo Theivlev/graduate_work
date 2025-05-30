@@ -1,20 +1,19 @@
 from typing import List, Tuple
 from uuid import UUID
 
+from fastapi.params import Security
 from pymongo.errors import DuplicateKeyError
+from src.auth_server.schemas.models import TokenValidationResult
+from src.auth_server.security import require_valid_token
 from src.crud.base import BaseMongoCRUD
 from src.models.like import UserLikes
 from src.paginations.pagination import PaginationLimits
 from src.services.likes import get_likes_service
 from src.shemas.user_likes import UserLikeCreateDTO, UserLikeResponse
 from src.utils.check_like import validate_like_exists
-from src.auth_server.schemas.models import TokenValidationResult
-from src.auth_server.security import require_valid_token
 from src.utils.security import ensure_user_owns_resource
 
-
 from fastapi import APIRouter, Depends, HTTPException, Query
-from fastapi.params import Security
 
 router = APIRouter()
 
@@ -79,12 +78,7 @@ async def get_like_films(
         raise HTTPException(status_code=500, detail=f"Ошибка сервера: {str(e)}")
 
 
-@router.post(
-    "/",
-    response_model=None,
-    summary="Добавление лайка",
-    description="Добавляет лайк"
-)
+@router.post("/", response_model=None, summary="Добавление лайка", description="Добавляет лайк")
 async def add_likes_films(
     like_data: UserLikeCreateDTO,
     service: BaseMongoCRUD = Depends(get_likes_service),
@@ -93,7 +87,7 @@ async def add_likes_films(
     """
     Добавить лайк.
     """
-    #ensure_user_owns_resource(like_data.user_id, token_payload.user_id, "добавить лайк")
+    # ensure_user_owns_resource(like_data.user_id, token_payload.user_id, "добавить лайк")
 
     try:
         new_like = await service.create(like_data.model_dump(by_alias=True))
@@ -148,7 +142,7 @@ async def update_like(
     token_payload: TokenValidationResult = Security(require_valid_token),
 ):
     ensure_user_owns_resource(like.user_id, token_payload.user_id, "обновить лайк")
-    
+
     try:
         data = {"rating": rating}
         success = await service.update(str(like.id), data)
