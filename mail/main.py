@@ -4,7 +4,7 @@ import logging
 import aio_pika
 import backoff
 from aio_pika.exceptions import AMQPConnectionError, ChannelClosed, ConnectionClosed
-from core.config import rabbit_settings, mail_queue_settings
+from core.config import mail_queue_settings, rabbit_settings
 from services.consumers import on_failed_message, on_message
 
 logger = logging.getLogger(__name__)

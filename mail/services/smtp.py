@@ -1,7 +1,7 @@
-import aiosmtplib
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
 
+import aiosmtplib
 from core.config import smtp_settings
 from services.template import get_template
 

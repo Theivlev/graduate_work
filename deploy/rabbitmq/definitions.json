@@ -44,6 +44,14 @@
       "durable": true,
       "auto_delete": false,
       "internal": false
+    },
+    {
+      "name": "ws_exchange",
+      "vhost": "/",
+      "type": "direct",
+      "durable": true,
+      "auto_delete": false,
+      "internal": false
     }
   ],
   "queues": [
@@ -73,6 +81,12 @@
       "vhost": "/",
       "durable": true,
       "auto_delete": false
+    },
+    {
+      "name": "ws_queue",
+      "vhost": "/",
+      "durable": true,
+      "auto_delete": false
     }
   ],
   "bindings": [
@@ -96,6 +110,13 @@
       "destination": "failed_queue",
       "destination_type": "queue",
       "routing_key": "failed"
+    },
+    {
+      "source": "ws_exchange",
+      "vhost": "/",
+      "destination": "ws_queue",
+      "destination_type": "queue",
+      "routing_key": "ws"
     }
   ]
 }

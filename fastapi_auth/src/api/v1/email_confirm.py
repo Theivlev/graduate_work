@@ -1,19 +1,20 @@
-from fastapi import APIRouter, HTTPException, Depends
+import jwt
 from fastapi.responses import RedirectResponse
 from sqlalchemy.ext.asyncio import AsyncSession
+from src.core.config import project_settings, redis_settings, ws_settings
 from src.db.postgres import get_async_session
-from src.models.user import User
-from src.core.config import project_settings, redis_settings
+from src.db.rabbitmq import rabbitmq_producer
 from src.db.redis_cache import RedisClientFactory
-import jwt
+from src.models.user import User
+from src.schemas.rabbit_schema import WsMessage
+
+from fastapi import APIRouter, Depends, HTTPException
 
 router = APIRouter()
 
+
 @router.get("/s/{short_id}")
-async def confirm_email(
-    short_id: str,
-    session: AsyncSession = Depends(get_async_session)
-):
+async def confirm_email(short_id: str, session: AsyncSession = Depends(get_async_session)):
     redis = await RedisClientFactory.create(redis_settings.dsn)
     token = await redis.get(f"email_confirm:{short_id}")
     if not token:
@@ -34,6 +35,11 @@ async def confirm_email(
         raise HTTPException(status_code=404, detail="Пользователь не найден")
     if not user.is_verified:
         user.is_verified = True
+        message = WsMessage(email=str(user.email), fullname=f"{user.name} {user.surname}", event_type="user_verified")
+        print(message)
+        await rabbitmq_producer.publish(
+            message.json(), exchange_name=ws_settings.ws_exchange, routing_key=ws_settings.ws_routing_key
+        )
         await session.commit()
 
     await redis.delete(f"email_confirm:{short_id}")
