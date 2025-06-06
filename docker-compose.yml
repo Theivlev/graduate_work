@@ -223,7 +223,7 @@ services:
       - "9000:9000"
     volumes:
       - ./clickhouse/data/node1:/etc/clickhouse-server
-      - ./clickhouse/database/init.sql:/docker-entrypoint-initdb.d/init.sql
+      - ./clickhouse/database/shard.sql:/docker-entrypoint-initdb.d/init.sql
     depends_on:
       - zookeeper
 
@@ -236,7 +236,7 @@ services:
       - "9001:9000"
     volumes:
       - ./clickhouse/data/node2:/etc/clickhouse-server
-      - ./clickhouse/database/init.sql:/docker-entrypoint-initdb.d/init.sql
+      - ./clickhouse/database/replica.sql:/docker-entrypoint-initdb.d/init.sql
     depends_on:
       - zookeeper
 
@@ -249,7 +249,7 @@ services:
       - "9002:9000"
     volumes:
       - ./clickhouse/data/node3:/etc/clickhouse-server
-      - ./clickhouse/database/init.sql:/docker-entrypoint-initdb.d/init.sql
+      - ./clickhouse/database/shard.sql:/docker-entrypoint-initdb.d/init.sql
     depends_on:
       - zookeeper
 
@@ -262,7 +262,7 @@ services:
       - "9003:9000"
     volumes:
       - ./clickhouse/data/node4:/etc/clickhouse-server
-      - ./clickhouse/database/init.sql:/docker-entrypoint-initdb.d/init.sql
+      - ./clickhouse/database/replica.sql:/docker-entrypoint-initdb.d/init.sql
     depends_on:
       - zookeeper
 
