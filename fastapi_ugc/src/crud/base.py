@@ -1,9 +1,10 @@
 from typing import Generic, List, Optional, Type, TypeVar
 
-from beanie import Document
 from bson import ObjectId
 
-ModelType = TypeVar("ModelType", bound=Document)
+from src.models.base import BaseDocument
+
+ModelType = TypeVar("ModelType", bound=BaseDocument)
 
 
 class BaseMongoCRUD(Generic[ModelType]):

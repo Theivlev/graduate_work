@@ -2,6 +2,8 @@ from contextlib import asynccontextmanager
 
 from fastapi.responses import ORJSONResponse
 from motor.motor_asyncio import AsyncIOMotorClient
+
+from broker.kafka import kafka_producer
 from src.api.routers import main_router
 from src.core.config import mongo_settings, project_settings
 from src.core.logger import request_id_var
@@ -16,10 +18,12 @@ async def lifespan(app: FastAPI):
     app.state.db = app.state.client[mongo_settings.ugc_db]
 
     await init_db(app.state.db)
+    await kafka_producer.start()
     try:
         yield
     finally:
         app.state.client.close()
+        await kafka_producer.stop()
 
 
 app = FastAPI(
