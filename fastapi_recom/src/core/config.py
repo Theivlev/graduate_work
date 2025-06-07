@@ -9,7 +9,6 @@ logging_config.dictConfig(LOGGING_CONFIG)
 
 
 class ProjectSettings(BaseSettings):
-    # FastAPI
     name: str
     summary: str
     version: str
