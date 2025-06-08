@@ -1,5 +1,3 @@
-# app/crud/base.py
-from typing import Optional
 from uuid import UUID
 
 from fastapi.encoders import jsonable_encoder
@@ -24,7 +22,7 @@ class CRUDBase:
         db_objs = await session.execute(self.get_query())
         return db_objs.scalars().all()
 
-    async def create(self, obj_in, session: AsyncSession, user: Optional[User] = None):
+    async def create(self, obj_in, session: AsyncSession, user: User | None = None):
         obj_in_data = obj_in.dict()
         if user is not None:
             obj_in_data["user_id"] = user.id
