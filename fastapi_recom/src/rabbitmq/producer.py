@@ -1,7 +1,7 @@
 import logging
 from faststream.rabbit import RabbitExchange, RabbitQueue
 from pydantic import BaseModel
-from ..rmq_objects import broker
+from .broker import broker
 from utils.backoff import backoff
 from aio_pika.exceptions import AMQPConnectionError, ConnectionClosed, ChannelClosed
 
