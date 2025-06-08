@@ -3,6 +3,7 @@ from sqlalchemy import String, ForeignKey
 from src.db.postgres import Base
 from src.models.genre import Genre
 from typing import List
+from uuid import UUID
 
 
 class Movies(Base):
@@ -11,7 +12,7 @@ class Movies(Base):
     title: Mapped[str] = mapped_column(String(255))
     imdb_rating: Mapped[float | None] = mapped_column(nullable=True)
 
-    genre_id: Mapped[int] = mapped_column(ForeignKey("genres.id"))
+    genre_id: Mapped[UUID] = mapped_column(ForeignKey("genres.id"))
 
     genres: Mapped[List["Genre"]] = relationship(
         secondary="movie_genre",
@@ -20,5 +21,5 @@ class Movies(Base):
 
 
 class MovieGenre(Base):
-    movie_id: Mapped[int] = mapped_column(ForeignKey("movies.id"), primary_key=True)
-    genre_id: Mapped[int] = mapped_column(ForeignKey("genres.id"), primary_key=True)
+    movie_id: Mapped[UUID] = mapped_column(ForeignKey("movies.id"), primary_key=True)
+    genre_id: Mapped[UUID] = mapped_column(ForeignKey("genres.id"), primary_key=True)
