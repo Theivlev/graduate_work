@@ -10,6 +10,6 @@ router = APIRouter()
     summary="Get recom",
     description="Get recomendations for users.",
 )
-@cache(expire=60)
+@cache(expire=30)
 async def get_recom():
     return {"message": "This is recomandation system"}
