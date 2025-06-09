@@ -1,26 +1,62 @@
-from dataclasses import dataclass
-from typing import List
-from uuid import UUID
-
-from fastapi import Depends
+from sklearn.metrics.pairwise import cosine_similarity
+import numpy as np
 from sqlalchemy.ext.asyncio import AsyncSession
-
+from sqlalchemy import select
+from uuid import UUID
+from src.models_ml.user import UserSimilarity, UserVector
+from src.models_ml.film import MovieSimilarity, MovieVector
 from src.crud.base import CRUDBase
-from src.db.postgres import get_async_session
-from src.models_ml.user import UserSimilarity
-from src.models_ml.film import MovieSimilarity
 
 
-def get_recommendation(session: AsyncSession = Depends(get_async_session)) -> "RecomendationService":
-    """Функция для получения истории входов."""
-    return RecomendationService(session)
+class SimilarityService:
+    def __init__(self, session: AsyncSession):
+        self.session = session
+        self.user_similarity_crud = CRUDBase(UserSimilarity)
+        self.movie_similarity_crud = CRUDBase(MovieSimilarity)
 
+    async def compute_user_similarity(self, user1_id: UUID, user2_id: UUID) -> float:
 
-@dataclass
-class RecomendationService:
-    session: AsyncSession
-    auth: CRUDBase = CRUDBase(UserSimilarity)
-    rating: CRUDBase = CRUDBase(MovieSimilarity)
+        user1_vector: UserVector = (await self.session.execute(
+            select(UserVector).where(UserVector.user_id == user1_id)
+        )).scalars().first()
+        user2_vector: UserVector = (await self.session.execute(
+            select(UserVector).where(UserVector.user_id == user2_id)
+        )).scalars().first()
 
-    async def get_recommendations():
-        pass
+        if not user1_vector or not user2_vector:
+            return 0.0
+
+        keys = set(user1_vector.vector_data.keys()) | set(user2_vector.vector_data.keys())
+        vec1 = np.array([user1_vector.vector_data.get(k, 0) for k in keys])
+        vec2 = np.array([user2_vector.vector_data.get(k, 0) for k in keys])
+
+        similarity = cosine_similarity([vec1], [vec2])[0][0]
+
+        user_similarity = UserSimilarity(user1_id=user1_id, user2_id=user2_id, similarity=similarity)
+        await self.user_similarity_crud.create(self.session, user_similarity)
+        await self.session.commit()
+
+        return similarity
+
+    async def compute_movie_similarity(self, movie1_id: UUID, movie2_id: UUID) -> float:
+        movie1_vector = (await self.session.execute(
+            select(MovieVector).where(MovieVector.movie_id == movie1_id)
+        )).scalars().first()
+        movie2_vector = (await self.session.execute(
+            select(MovieVector).where(MovieVector.movie_id == movie2_id)
+        )).scalars().first()
+
+        if not movie1_vector or not movie2_vector:
+            return 0.0
+
+        keys = set(movie1_vector.vector_data.keys()) | set(movie2_vector.vector_data.keys())
+        vec1 = np.array([movie1_vector.vector_data.get(k, 0) for k in keys])
+        vec2 = np.array([movie2_vector.vector_data.get(k, 0) for k in keys])
+
+        similarity = cosine_similarity([vec1], [vec2])[0][0]
+
+        movie_similarity = MovieSimilarity(movie1_id=movie1_id, movie2_id=movie2_id, similarity=similarity)
+        await self.movie_similarity_crud.create(self.session, movie_similarity)
+        await self.session.commit()
+
+        return similarity
