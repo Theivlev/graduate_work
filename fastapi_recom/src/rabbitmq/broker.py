@@ -1,5 +1,5 @@
 from faststream.rabbit import RabbitBroker
-from core.config import rabbit_settings
+from core.config import rabbitmq_settings
 
 
-broker = RabbitBroker(rabbit_settings.model_config)
+broker = RabbitBroker(rabbitmq_settings.model_config)
