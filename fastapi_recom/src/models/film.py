@@ -1,16 +1,15 @@
+from uuid import UUID
+from typing import List
+
+from sqlalchemy import ForeignKey
 from sqlalchemy.orm import Mapped, mapped_column, relationship
-from sqlalchemy import String, ForeignKey
+
 from src.db.postgres import Base
 from src.models.genre import Genre
-from typing import List
-from uuid import UUID
 
 
 class Movies(Base):
     """Базовая информация о фильме."""
-
-    title: Mapped[str] = mapped_column(String(255))
-    imdb_rating: Mapped[float | None] = mapped_column(nullable=True)
 
     genre_id: Mapped[UUID] = mapped_column(ForeignKey("genres.id"))
 

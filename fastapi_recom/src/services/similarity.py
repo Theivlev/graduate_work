@@ -1,12 +1,14 @@
-from sklearn.metrics.pairwise import cosine_similarity
-import numpy as np
-from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select
-from uuid import UUID
-from src.models_ml.user import UserSimilarity, UserVector
-from src.models_ml.film import MovieSimilarity, MovieVector
-from src.crud.base import CRUDBase
 from dataclasses import dataclass
+from uuid import UUID
+
+import numpy as np
+from sqlalchemy import select
+from sqlalchemy.ext.asyncio import AsyncSession
+from sklearn.metrics.pairwise import cosine_similarity
+
+from src.crud.base import CRUDBase
+from src.models_ml.film import MovieSimilarity, MovieVector
+from src.models_ml.user import UserSimilarity, UserVector
 
 
 @dataclass

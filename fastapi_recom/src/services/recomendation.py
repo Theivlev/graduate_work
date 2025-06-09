@@ -1,17 +1,17 @@
 from dataclasses import dataclass
 from typing import List
 from uuid import UUID
-from sqlalchemy import select
+
 from fastapi import Depends
-from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
+from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.crud.base import CRUDBase
 from src.db.postgres import get_async_session
-from src.models_ml.user import UserSimilarity
-from src.models_ml.film import MovieSimilarity
 from src.models.rating import Ratings
 from src.models.film import Movies
+from src.models_ml.film import MovieSimilarity
+from src.models_ml.user import UserSimilarity
 
 
 def get_recommendation(session: AsyncSession = Depends(get_async_session)) -> "RecomendationService":
@@ -45,7 +45,6 @@ class RecomendationService:
                 if movie:
                     recommended_movies.append({
                         "movie_id": movie.id,
-                        "title": movie.title,
                         "imdb_rating": movie.imdb_rating,
                         "similarity": sim.similarity
                     })

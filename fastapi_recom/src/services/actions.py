@@ -10,8 +10,9 @@ from src.db.postgres import get_async_session
 from src.models.actions import Actions
 from src.shemas.actions_user import ActionsUserDTO
 from src.models.rating import Ratings
+from sqlalchemy import select, update, func
 from src.models.film import Movies
-from sqlalchemy import select, update
+from src.models.user import User
 
 
 def get_actions(session: AsyncSession = Depends(get_async_session)) -> "ActionsService":
@@ -23,9 +24,11 @@ def get_actions(session: AsyncSession = Depends(get_async_session)) -> "ActionsS
 class ActionsService:
     session: AsyncSession
     actions: CRUDBase = CRUDBase(Actions)
+    ratings: CRUDBase = CRUDBase(Ratings)
+    movies: CRUDBase = CRUDBase(Movies)
+    users: CRUDBase = CRUDBase(User)
 
     async def save_action(self, action_dto: ActionsUserDTO):
-
         user_id = UUID(action_dto.user_id) if isinstance(action_dto.user_id, str) else action_dto.user_id
         movie_id = UUID(action_dto.movies_id) if isinstance(action_dto.movies_id, str) else action_dto.movies_id
         genre_id = UUID(action_dto.genre_id) if isinstance(action_dto.genre_id, str) else action_dto.genre_id
@@ -35,6 +38,27 @@ class ActionsService:
             else action_dto.event_time
         )
 
+        existing_user = (await self.session.execute(
+            select(User).where(User.id == user_id)
+        )).scalars().first()
+
+        if not existing_user:
+
+            user = User(id=user_id)
+            await self.users.create(self.session, user)
+
+        existing_movie = (await self.session.execute(
+            select(Movies).where(Movies.id == movie_id)
+        )).scalars().first()
+
+        if not existing_movie:
+
+            movie = Movies(
+                id=movie_id,
+                imdb_rating=None
+            )
+            await self.movies.create(self.session, movie)
+
         action = Actions(
             user_id=user_id,
             movie_id=movie_id,
@@ -43,14 +67,13 @@ class ActionsService:
             event_time=event_time,
             event_data=action_dto.event_data,
         )
-
         await self.actions.create(self.session, action)
 
         if action_dto.actions == "rate":
             try:
                 rating_value = int(action_dto.event_data)
                 if not 1 <= rating_value <= 10:
-                    raise ValueError("Rating must be between 1 and 10")
+                    raise ValueError("Рейтинг должен быть от 1 до 10")
 
                 existing_rating = (await self.session.execute(
                     select(Ratings).where(
@@ -72,10 +95,10 @@ class ActionsService:
                         rating=rating_value,
                         timestamp=event_time
                     )
-                    await self.ratings_crud.create(self.session, rating)
+                    await self.ratings.create(self.session, rating)
 
             except ValueError as e:
-                print(f"Invalid rating value: {e}")
+                print(f"Некорректное значение рейтинга: {e}")
 
         await self.session.commit()
         return action
