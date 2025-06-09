@@ -4,6 +4,7 @@ from uuid import UUID
 from sqlalchemy import select
 from fastapi import Depends
 from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy import select
 
 from src.crud.base import CRUDBase
 from src.db.postgres import get_async_session

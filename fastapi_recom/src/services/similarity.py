@@ -6,13 +6,14 @@ from uuid import UUID
 from src.models_ml.user import UserSimilarity, UserVector
 from src.models_ml.film import MovieSimilarity, MovieVector
 from src.crud.base import CRUDBase
+from dataclasses import dataclass
 
 
+@dataclass
 class SimilarityService:
-    def __init__(self, session: AsyncSession):
-        self.session = session
-        self.user_similarity_crud = CRUDBase(UserSimilarity)
-        self.movie_similarity_crud = CRUDBase(MovieSimilarity)
+    session: AsyncSession
+    user_similarity_crud = CRUDBase(UserSimilarity)
+    movie_similarity_crud = CRUDBase(MovieSimilarity)
 
     async def compute_user_similarity(self, user1_id: UUID, user2_id: UUID) -> float:
 

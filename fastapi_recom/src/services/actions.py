@@ -9,6 +9,9 @@ from src.crud.base import CRUDBase
 from src.db.postgres import get_async_session
 from src.models.actions import Actions
 from src.shemas.actions_user import ActionsUserDTO
+from src.models.rating import Ratings
+from src.models.film import Movies
+from sqlalchemy import select, update
 
 
 def get_actions(session: AsyncSession = Depends(get_async_session)) -> "ActionsService":
@@ -42,5 +45,37 @@ class ActionsService:
         )
 
         await self.actions.create(self.session, action)
+
+        if action_dto.actions == "rate":
+            try:
+                rating_value = int(action_dto.event_data)
+                if not 1 <= rating_value <= 10:
+                    raise ValueError("Rating must be between 1 and 10")
+
+                existing_rating = (await self.session.execute(
+                    select(Ratings).where(
+                        Ratings.user_id == user_id,
+                        Ratings.movie_id == movie_id
+                    )
+                )).scalars().first()
+
+                if existing_rating:
+                    await self.session.execute(
+                        update(Ratings)
+                        .where(Ratings.user_id == user_id, Ratings.movie_id == movie_id)
+                        .values(rating=rating_value, timestamp=func.now())
+                    )
+                else:
+                    rating = Ratings(
+                        user_id=user_id,
+                        movie_id=movie_id,
+                        rating=rating_value,
+                        timestamp=event_time
+                    )
+                    await self.ratings_crud.create(self.session, rating)
+
+            except ValueError as e:
+                print(f"Invalid rating value: {e}")
+
         await self.session.commit()
         return action
