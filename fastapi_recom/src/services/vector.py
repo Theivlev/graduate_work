@@ -5,12 +5,19 @@ from dataclasses import dataclass
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from fastapi import Depends
 from src.models.actions import Actions
 from src.models.film import Movies
 from src.models.rating import Ratings
 from src.models_ml.film import MovieVector
 from src.models_ml.user import UserVector
 from src.crud.base import CRUDBase
+from src.db.postgres import get_async_session
+
+
+def get_vector_service(session: AsyncSession = Depends(get_async_session)) -> "VectorService":
+    """Функция для получения истории входов."""
+    return VectorService(session)
 
 
 @dataclass

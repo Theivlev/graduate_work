@@ -10,13 +10,12 @@ from rabbitmq.exchanges import EXCHANGES
 from rabbitmq.queues import QUEUES
 
 from src.db.postgres import get_async_session
-from src.schemas.actions_user import ActionsUserDTO
+from src.sсhemas.actions_user import ActionsUserDTO
 from src.services.actions import ActionsService, get_actions
 from src.services.similarity import SimilarityService, get_similarity_service
 from src.services.vector import VectorService, get_vector_service
 from src.models.film import Movies
 from src.models.user import User
-
 
 
 @broker.subscriber(QUEUES[RoutingKeys.ACTIONS], EXCHANGES[RoutingKeys.ACTIONS])
