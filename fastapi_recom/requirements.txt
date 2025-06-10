@@ -16,4 +16,4 @@ uvicorn==0.23.1
 slowapi==0.1.8
 aio-pika==9.1.5
 asyncpg==0.28.0
-greenlet==2.0.2
+greenlet>=2.0
