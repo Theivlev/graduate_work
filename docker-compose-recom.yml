@@ -1,35 +1,35 @@
 version: '3.8'
 
 services:
-  fastapi1:
-    image: alpine
-    stdin_open: true
-    tty: true
+  # fastapi1:
+  #   image: alpine
+  #   stdin_open: true
+  #   tty: true
 
-  fastapi2:
-    image: alpine
-    stdin_open: true
-    tty: true
+  # fastapi2:
+  #   image: alpine
+  #   stdin_open: true
+  #   tty: true
 
-  fastapi_auth1:
-    image: alpine
-    stdin_open: true
-    tty: true
+  # fastapi_auth1:
+  #   image: alpine
+  #   stdin_open: true
+  #   tty: true
 
-  fastapi_auth2:
-    image: alpine
-    stdin_open: true
-    tty: true
+  # fastapi_auth2:
+  #   image: alpine
+  #   stdin_open: true
+  #   tty: true
 
-  fastapi_ugc:
-    image: alpine
-    stdin_open: true
-    tty: true
+  # fastapi_ugc:
+  #   image: alpine
+  #   stdin_open: true
+  #   tty: true
 
-  fastapi_ws:
-    image: alpine
-    stdin_open: true
-    tty: true
+  # fastapi_ws:
+  #   image: alpine
+  #   stdin_open: true
+  #   tty: true
 
   fastapi_recom:
     build:
@@ -73,12 +73,12 @@ services:
       - ./nginx/configs:/etc/nginx/conf.d:ro
     depends_on:
       - fastapi_recom
-      - fastapi1
-      - fastapi2
-      - fastapi_auth1
-      - fastapi_auth2
-      - fastapi_ugc
-      - fastapi_ws
+      # - fastapi1
+      # - fastapi2
+      # - fastapi_auth1
+      # - fastapi_auth2
+      # - fastapi_ugc
+      # - fastapi_ws
     ports:
       - "80:80"
 
