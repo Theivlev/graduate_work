@@ -36,6 +36,7 @@ services:
       context: ./fastapi_recom
       dockerfile: Dockerfile
     container_name: fastapi_recom
+    restart: always
     ports:
       - "8050:8050"
     env_file:
@@ -43,6 +44,23 @@ services:
     depends_on:
       - redis
       - theatre-db
+
+  rabbitmq:
+    image: rabbitmq:3.10.7-management
+    restart: always
+    env_file:
+      - .env
+    ports:
+      - "15672:15672"
+      - "5672:5672"
+    volumes:
+      - rabbitmq:/var/lib/rabbitmq
+    command: >
+      sh -c "
+      rabbitmq-plugins enable rabbitmq_federation &&
+      rabbitmq-plugins enable rabbitmq_federation_management &&
+      rabbitmq-server
+      "
 
   redis:
     image: redislabs/redismod:latest
@@ -85,3 +103,4 @@ services:
 volumes:
   postgres_data:
   redis_data:
+  rabbitmq:
