@@ -17,3 +17,6 @@ slowapi==0.1.8
 aio-pika==9.1.5
 asyncpg==0.28.0
 greenlet>=2.0
+pydantic==2.4.1
+pydantic-core==2.10.1
+pydantic-settings==2.0.3
