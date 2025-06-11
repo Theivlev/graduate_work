@@ -6,7 +6,6 @@ from src.core.config import project_settings, redis_settings
 from src.core.logger import request_id_var
 from src.db.redis_cache import RedisCacheManager
 from src.rabbitmq.broker import broker
-from src.rabbitmq.app import app_broker
 from fastapi import FastAPI, Request, status
 
 
@@ -17,12 +16,12 @@ async def lifespan(app: FastAPI):
     redis_cache_manager = RedisCacheManager(redis_settings)
     try:
         await redis_cache_manager.setup()
-        await app_broker.start()
+        await broker.start()
         yield
 
     finally:
         await redis_cache_manager.tear_down()
-        await app_broker.close()
+        await broker.close()
 
 
 app = FastAPI(
