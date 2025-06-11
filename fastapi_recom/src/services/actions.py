@@ -6,18 +6,12 @@ from fastapi import Depends
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.crud.base import CRUDBase
-from src.db.postgres import get_async_session
 from src.models.actions import Actions
 from src.sсhemas.actions_user import ActionsUserDTO
 from src.models.rating import Ratings
 from sqlalchemy import select, update, func
 from src.models.film import Movies
 from src.models.user import User
-
-
-def get_actions(session: AsyncSession = Depends(get_async_session)) -> "ActionsService":
-    """Функция для получения истории входов."""
-    return ActionsService(session)
 
 
 @dataclass
@@ -102,6 +96,3 @@ class ActionsService:
 
         await self.session.commit()
         return action
-
-
-actions_serivce = ActionsService(session)

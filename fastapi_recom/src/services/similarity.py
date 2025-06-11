@@ -6,16 +6,9 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sklearn.metrics.pairwise import cosine_similarity
 
-from fastapi import Depends
 from src.crud.base import CRUDBase
 from src.models_ml.film import MovieSimilarity, MovieVector
 from src.models_ml.user import UserSimilarity, UserVector
-from src.db.postgres import get_async_session
-
-
-def get_similarity_service(session: AsyncSession = Depends(get_async_session)) -> "SimilarityService":
-    """Функция для получения истории входов."""
-    return SimilarityService(session)
 
 
 @dataclass

@@ -25,32 +25,27 @@ logger = logging.getLogger(__name__)
 
 
 @broker.subscriber(QUEUES[RoutingKeys.ACTIONS], EXCHANGES[RoutingKeys.ACTIONS])
-async def actions_user(message: ActionsUserDTO):
+async def actions_user(
+    message: ActionsUserDTO,
+):
     """Обрабатывает сообщения о действиях пользователя из RabbitMQ."""
     try:
-        async with get_async_session() as session:
-            actions_service = get_actions()
-            vector_service = get_vector_service()
-            similarity_service = get_similarity_service()
-            logger.info(f'ЗАХОДИММММММММ')
-            return
-            await actions_service.save_action(message)
+        return
+        user_id = UUID(message.user_id) if isinstance(message.user_id, str) else message.user_id
+        movie_id = UUID(message.movies_id) if isinstance(message.movies_id, str) else message.movies_id
+        await vector_service.compute_user_vector(user_id)
+        await vector_service.compute_movie_vector(movie_id)
 
-            user_id = UUID(message.user_id) if isinstance(message.user_id, str) else message.user_id
-            movie_id = UUID(message.movies_id) if isinstance(message.movies_id, str) else message.movies_id
-            await vector_service.compute_user_vector(user_id)
-            await vector_service.compute_movie_vector(movie_id)
+        users = (await session.execute(select(User))).scalars().all()
+        for other_user in users:
+            if other_user.id != user_id:
+                await similarity_service.compute_user_similarity(user_id, other_user.id)
 
-            users = (await session.execute(select(User))).scalars().all()
-            for other_user in users:
-                if other_user.id != user_id:
-                    await similarity_service.compute_user_similarity(user_id, other_user.id)
+        movies = (await session.execute(select(Movies))).scalars().all()
+        for other_movie in movies:
+            if other_movie.id != movie_id:
+                await similarity_service.compute_movie_similarity(movie_id, other_movie.id)
 
-            movies = (await session.execute(select(Movies))).scalars().all()
-            for other_movie in movies:
-                if other_movie.id != movie_id:
-                    await similarity_service.compute_movie_similarity(movie_id, other_movie.id)
-
-            await session.commit()
+        await session.commit()
     except Exception as e:
         print(f"Ошибка при обработке сообщения: {e}")
