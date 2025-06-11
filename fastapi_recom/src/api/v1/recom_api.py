@@ -15,4 +15,8 @@ router = APIRouter()
 async def get_recom(
     reccomandation_service: RecomendationService = Depends(get_recommendation),
 ):
-    return {"message": "This is recomandation system"}
+    try:
+        reccomandation = await reccomandation_service.get_recommendations(user_id=...)
+        pass
+    except Exception as e:
+        raise e

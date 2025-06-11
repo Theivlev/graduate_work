@@ -56,3 +56,38 @@ class RecomendationService:
         )[:limit]
 
         return recommended_movies
+
+    async def get_general_recommendations(self, limit: int = 10) -> List[dict]:
+        """Получить общие рекомендации на основе сходства фильмов."""
+
+        popular_movies = (await self.session.execute(
+            select(Movies).where(Movies.imdb_rating >= 7.0).order_by(Movies.imdb_rating.desc()).limit(10)
+        )).scalars().all()
+
+        recommended_movies = []
+
+        for movie in popular_movies:
+            similarities = (await self.session.execute(
+                select(MovieSimilarity).where(MovieSimilarity.movie1_id == movie.id)
+            )).scalars().all()
+
+            similar_movies = sorted(similarities, key=lambda x: x.similarity, reverse=True)[:5]
+
+            for sim in similar_movies:
+                similar_movie = (await self.session.execute(
+                    select(Movies).where(Movies.id == sim.movie2_id)
+                )).scalars().first()
+                if similar_movie:
+                    recommended_movies.append({
+                        "movie_id": similar_movie.id,
+                        "imdb_rating": similar_movie.imdb_rating,
+                        "similarity": sim.similarity
+                    })
+
+        recommended_movies = sorted(
+            recommended_movies,
+            key=lambda x: (x["similarity"], x["imdb_rating"] or 0),
+            reverse=True
+        )[:limit]
+
+        return recommended_movies
