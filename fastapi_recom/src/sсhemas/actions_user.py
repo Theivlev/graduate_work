@@ -10,4 +10,4 @@ class ActionsUserDTO(BaseModel):
     genre_id: UUID | str | None = None
     actions: str | dict
     event_time: datetime | str
-    event_data: str
+    event_data: str | dict
