@@ -62,18 +62,6 @@ services:
       rabbitmq-server
       "
 
-    ml_consumer:
-      build:
-        context: ./backend
-      command:
-        faststream run rabbitmq.asynchronous.app:app
-      links:
-        - rabbitmq
-        - redis
-      depends_on:
-        - rabbitmq
-      restart: always
-
   redis:
     image: redislabs/redismod:latest
     container_name: redis
