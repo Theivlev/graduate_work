@@ -32,7 +32,8 @@ async def actions_user(message: ActionsUserDTO):
             actions_service = get_actions()
             vector_service = get_vector_service()
             similarity_service = get_similarity_service()
-
+            logger.info(f'ЗАХОДИММММММММ')
+            return
             await actions_service.save_action(message)
 
             user_id = UUID(message.user_id) if isinstance(message.user_id, str) else message.user_id

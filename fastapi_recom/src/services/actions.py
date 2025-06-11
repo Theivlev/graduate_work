@@ -102,3 +102,6 @@ class ActionsService:
 
         await self.session.commit()
         return action
+
+
+actions_serivce = ActionsService(session)
