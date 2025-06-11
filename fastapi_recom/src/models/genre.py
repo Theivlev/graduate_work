@@ -4,7 +4,6 @@ from sqlalchemy.orm import mapped_column, Mapped, relationship
 from sqlalchemy import String
 
 from src.db.postgres import Base
-from src.models.film import Movies
 
 
 class Genre(Base):

@@ -8,7 +8,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from src.crud.base import CRUDBase
 from src.db.postgres import get_async_session
 from src.models.actions import Actions
-from src.shemas.actions_user import ActionsUserDTO
+from src.sсhemas.actions_user import ActionsUserDTO
 from src.models.rating import Ratings
 from sqlalchemy import select, update, func
 from src.models.film import Movies

@@ -1,13 +1,14 @@
 from uuid import UUID
 
 from fastapi import Depends
+from faststream import FastStream
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from rabbitmq.broker import broker
-from rabbitmq.enums import RoutingKeys
-from rabbitmq.exchanges import EXCHANGES
-from rabbitmq.queues import QUEUES
+from src.rabbitmq.broker import broker
+from src.rabbitmq.enums import RoutingKeys
+from src.rabbitmq.exchanges import EXCHANGES
+from src.rabbitmq.queues import QUEUES
 
 from src.db.postgres import get_async_session
 from src.sсhemas.actions_user import ActionsUserDTO

@@ -2,7 +2,6 @@ from logging import config as logging_config
 
 from pydantic import Field
 from pydantic_settings import BaseSettings, SettingsConfigDict
-from functools import cached_property
 
 from .logger import LOGGING_CONFIG
 
@@ -10,6 +9,7 @@ logging_config.dictConfig(LOGGING_CONFIG)
 
 
 class ProjectSettings(BaseSettings):
+    debug: bool = False
     name: str
     summary: str
     version: str
