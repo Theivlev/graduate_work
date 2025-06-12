@@ -9,6 +9,7 @@ from src.crud.base import CRUDBase
 from src.models_ml.film import MovieSimilarity, MovieVector
 from src.models_ml.user import UserSimilarity, UserVector
 from sqlalchemy.ext.asyncio import AsyncSession
+from src.schemas.similarity import UserSimilarityCreate, MovieSimilarityCreate
 
 
 @dataclass
@@ -34,8 +35,13 @@ class SimilarityService:
 
         similarity = cosine_similarity([vec1], [vec2])[0][0]
 
-        user_similarity = UserSimilarity(user1_id=user1_id, user2_id=user2_id, similarity=similarity)
-        await self.user_similarity_crud.create(session, user_similarity)
+        dto = UserSimilarityCreate(
+            user1_id=user1_id,
+            user2_id=user2_id,
+            similarity=similarity
+        )
+
+        await self.user_similarity_crud.create(obj_in=dto, session=session)
         await session.commit()
 
         return similarity
@@ -57,8 +63,13 @@ class SimilarityService:
 
         similarity = cosine_similarity([vec1], [vec2])[0][0]
 
-        movie_similarity = MovieSimilarity(movie1_id=movie1_id, movie2_id=movie2_id, similarity=similarity)
-        await self.movie_similarity_crud.create(obj_in=movie_similarity, session=session)
+        dto = MovieSimilarityCreate(
+            movie1_id=movie1_id,
+            movie2_id=movie2_id,
+            similarity=similarity
+        )
+
+        await self.movie_similarity_crud.create(obj_in=dto, session=session)
         await session.commit()
 
         return similarity

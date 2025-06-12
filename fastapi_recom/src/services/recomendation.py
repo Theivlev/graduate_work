@@ -45,13 +45,13 @@ class RecomendationService:
                 if movie:
                     recommended_movies.append({
                         "movie_id": movie.id,
-                        "imdb_rating": movie.imdb_rating,
+                        "ratings": movie.ratings,
                         "similarity": sim.similarity
                     })
 
         recommended_movies = sorted(
             recommended_movies,
-            key=lambda x: (x["similarity"], x["imdb_rating"] or 0),
+            key=lambda x: (x["similarity"], x["ratings"] or 0),
             reverse=True
         )[:limit]
 
@@ -61,7 +61,7 @@ class RecomendationService:
         """Получить общие рекомендации на основе сходства фильмов."""
 
         popular_movies = (await self.session.execute(
-            select(Movies).where(Movies.imdb_rating >= 7.0).order_by(Movies.imdb_rating.desc()).limit(10)
+            select(Movies).where(Movies.imdb_rating >= 7.0).order_by(Movies.ratings.desc()).limit(10)
         )).scalars().all()
 
         recommended_movies = []
@@ -80,13 +80,13 @@ class RecomendationService:
                 if similar_movie:
                     recommended_movies.append({
                         "movie_id": similar_movie.id,
-                        "imdb_rating": similar_movie.imdb_rating,
+                        "ratings": similar_movie.ratings,
                         "similarity": sim.similarity
                     })
 
         recommended_movies = sorted(
             recommended_movies,
-            key=lambda x: (x["similarity"], x["imdb_rating"] or 0),
+            key=lambda x: (x["similarity"], x["ratings"] or 0),
             reverse=True
         )[:limit]
 
