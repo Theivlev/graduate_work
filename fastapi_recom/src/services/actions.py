@@ -23,7 +23,6 @@ class ActionsService:
     async def save_action(self, action_dto: ActionsUserDTO, session: AsyncSession):
         user_id = UUID(action_dto.user_id) if isinstance(action_dto.user_id, str) else action_dto.user_id
         movie_id = UUID(action_dto.movies_id) if isinstance(action_dto.movies_id, str) else action_dto.movies_id
-        genre_id = UUID(action_dto.genre_id) if isinstance(action_dto.genre_id, str) else action_dto.genre_id
         event_time = (
             datetime.fromisoformat(action_dto.event_time)
             if isinstance(action_dto.event_time, str)
@@ -54,7 +53,6 @@ class ActionsService:
         action = Actions(
             user_id=user_id,
             movie_id=movie_id,
-            genre_id=genre_id,
             action=action_dto.actions,
             event_time=event_time,
             event_data=action_dto.event_data,

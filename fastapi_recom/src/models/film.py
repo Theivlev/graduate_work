@@ -5,25 +5,8 @@ from sqlalchemy import ForeignKey
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from src.db.postgres import Base
-from src.models.genre import Genre
 
 
 class Movies(Base):
     """Базовая информация о фильме."""
-
-    genre_id: Mapped[UUID] = mapped_column(ForeignKey("genres.id"))
-
-    genres: Mapped[List["Genre"]] = relationship(
-        "genres",
-        secondary="movie_genre",
-        primaryjoin="Movies.id == MovieGenre.movie_id",
-        secondaryjoin="Genre.id == MovieGenre.genre_id",
-        back_populates="movies"
-    )
-
-
-class MovieGenre(Base):
-    __tablename__ = "movie_genre"
-
-    movie_id: Mapped[UUID] = mapped_column(ForeignKey("movies.id"), primary_key=True)
-    genre_id: Mapped[UUID] = mapped_column(ForeignKey("genres.id"), primary_key=True)
+    ratings: Mapped[List["Ratings"]] = relationship("Ratings", back_populates="movie")
