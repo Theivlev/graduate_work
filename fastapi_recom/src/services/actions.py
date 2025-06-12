@@ -33,7 +33,7 @@ class ActionsService:
 
         try:
             user_id = UUID(action_dto.user_id) if isinstance(action_dto.user_id, str) else action_dto.user_id
-            movie_id = UUID(action_dto.movies_id) if isinstance(action_dto.movies_id, str) else action_dto.movies_id
+            movie_id = UUID(action_dto.movie_id) if isinstance(action_dto.movie_id, str) else action_dto.movie_id
             event_time = (
                 datetime.fromisoformat(action_dto.event_time)
                 if isinstance(action_dto.event_time, str)
@@ -50,16 +50,9 @@ class ActionsService:
                 movie_create = MovieSchema(id=movie_id)
                 await self.movies.create(obj_in=movie_create, session=session)
 
-            action = Actions(
-                user_id=user_id,
-                movie_id=movie_id,
-                action=action_dto.actions,
-                event_time=event_time,
-                event_data=action_dto.event_data,
-            )
-            await self.actions.create(obj_in=action, session=session)
+            await self.actions.create(obj_in=action_dto, session=session)
 
-            if action_dto.actions == "rate":
+            if action_dto.action.get('type') == "rate":
                 try:
                     rating_value = int(action_dto.event_data)
                     if not 1 <= rating_value <= 10:
@@ -80,7 +73,6 @@ class ActionsService:
                         )
                     else:
                         rating_create = RatingSchema(
-                            id=UUID(...),
                             user_id=user_id,
                             movie_id=movie_id,
                             rating=rating_value,
@@ -93,7 +85,7 @@ class ActionsService:
                     print(f"Некорректное значение рейтинга: {e}")
 
             await session.commit()
-            return action
+            return True
 
         except Exception as e:
             logger.error(f"Ошибка при обработке сообщения: {e}", exc_info=True)

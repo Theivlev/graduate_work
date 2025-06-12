@@ -1,5 +1,7 @@
+from uuid import UUID, uuid4
 from datetime import datetime
 from uuid import UUID
+from pydantic import Field
 
 from .dto import AbstractDTO
 
@@ -20,6 +22,6 @@ class RatingUpdate(RatingBase):
 
 
 class RatingSchema(RatingBase):
-    id: UUID
+    id: UUID = Field(default_factory=uuid4)
     user_id: UUID
     movie_id: UUID

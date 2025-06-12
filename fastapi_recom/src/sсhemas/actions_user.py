@@ -1,13 +1,12 @@
 from datetime import datetime
 from uuid import UUID
 
-from pydantic import BaseModel
+from .dto import AbstractDTO
 
 
-class ActionsUserDTO(BaseModel):
+class ActionsUserDTO(AbstractDTO):
     user_id: UUID | str
-    movies_id: UUID | str
-    genre_id: UUID | str | None = None
-    actions: str | dict
-    event_time: datetime | str
+    movie_id: UUID | str
+    action: str | dict
+    event_time: datetime
     event_data: str | dict

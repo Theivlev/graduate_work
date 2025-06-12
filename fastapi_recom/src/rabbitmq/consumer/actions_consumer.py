@@ -43,8 +43,7 @@ async def actions_user(
         async with db_session() as session:
 
             user_id = UUID(message.user_id) if isinstance(message.user_id, str) else message.user_id
-            movie_id = UUID(message.movies_id) if isinstance(message.movies_id, str) else message.movies_id
-            logger.info(f'ЗАХОДИММММММ')
+            movie_id = UUID(message.movie_id) if isinstance(message.movie_id, str) else message.movie_id
             await actions_service.save_action(action_dto=message, session=session)
             return
             await vector_service.compute_user_vector(user_id, session=session)
