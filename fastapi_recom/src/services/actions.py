@@ -53,13 +53,13 @@ class ActionsService:
             action = Actions(
                 user_id=user_id,
                 movie_id=movie_id,
-                action=action_dto.action,
+                action=action_dto.actions,
                 event_time=event_time,
                 event_data=action_dto.event_data,
             )
             await self.actions.create(obj_in=action, session=session)
 
-            if action_dto.action == "rate":
+            if action_dto.actions == "rate":
                 try:
                     rating_value = int(action_dto.event_data)
                     if not 1 <= rating_value <= 10:
