@@ -1,3 +1,4 @@
+import logging
 from uuid import UUID
 
 from fastapi import Depends
@@ -12,16 +13,25 @@ from src.rabbitmq.queues import QUEUES
 
 from src.db.postgres import get_async_session
 from src.sсhemas.actions_user import ActionsUserDTO
-from src.services.actions import ActionsService, get_actions
-from src.services.similarity import SimilarityService, get_similarity_service
-from src.services.vector import VectorService, get_vector_service
 from src.models.film import Movies
-from src.models.user import User
+from src.models.user import Users
+from src.services.actions import actions_service
+from src.services.similarity import similarity_service
+from src.services.vector import vector_service
+from sqlalchemy.ext.asyncio import async_sessionmaker
+from src.db.postgres import engine
 
 
-import logging
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 logger = logging.getLogger(__name__)
+
+
+db_session = async_sessionmaker(
+    bind=engine,
+    autoflush=False,
+    expire_on_commit=False,
+    class_=AsyncSession
+)
 
 
 @broker.subscriber(QUEUES[RoutingKeys.ACTIONS], EXCHANGES[RoutingKeys.ACTIONS])
@@ -30,22 +40,23 @@ async def actions_user(
 ):
     """Обрабатывает сообщения о действиях пользователя из RabbitMQ."""
     try:
-        return
-        user_id = UUID(message.user_id) if isinstance(message.user_id, str) else message.user_id
-        movie_id = UUID(message.movies_id) if isinstance(message.movies_id, str) else message.movies_id
-        await vector_service.compute_user_vector(user_id)
-        await vector_service.compute_movie_vector(movie_id)
+        async with db_session() as session:
 
-        users = (await session.execute(select(User))).scalars().all()
-        for other_user in users:
-            if other_user.id != user_id:
-                await similarity_service.compute_user_similarity(user_id, other_user.id)
+            user_id = UUID(message.user_id) if isinstance(message.user_id, str) else message.user_id
+            movie_id = UUID(message.movies_id) if isinstance(message.movies_id, str) else message.movies_id
+            await vector_service.compute_user_vector(user_id, session=session)
+            await vector_service.compute_movie_vector(movie_id)
 
-        movies = (await session.execute(select(Movies))).scalars().all()
-        for other_movie in movies:
-            if other_movie.id != movie_id:
-                await similarity_service.compute_movie_similarity(movie_id, other_movie.id)
+            users = (await session.execute(select(Users))).scalars().all()
+            for other_user in users:
+                if other_user.id != user_id:
+                    await similarity_service.compute_user_similarity(user_id, other_user.id)
 
-        await session.commit()
+            movies = (await session.execute(select(Movies))).scalars().all()
+            for other_movie in movies:
+                if other_movie.id != movie_id:
+                    await similarity_service.compute_movie_similarity(movie_id, other_movie.id)
+
+            await session.commit()
     except Exception as e:
         print(f"Ошибка при обработке сообщения: {e}")

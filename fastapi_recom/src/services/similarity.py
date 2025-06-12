@@ -3,7 +3,6 @@ from uuid import UUID
 
 import numpy as np
 from sqlalchemy import select
-from sqlalchemy.ext.asyncio import AsyncSession
 from sklearn.metrics.pairwise import cosine_similarity
 
 from src.crud.base import CRUDBase
@@ -13,7 +12,6 @@ from src.models_ml.user import UserSimilarity, UserVector
 
 @dataclass
 class SimilarityService:
-    session: AsyncSession
     user_similarity_crud = CRUDBase(UserSimilarity)
     movie_similarity_crud = CRUDBase(MovieSimilarity)
 
@@ -63,3 +61,6 @@ class SimilarityService:
         await self.session.commit()
 
         return similarity
+
+
+similarity_service = SimilarityService()

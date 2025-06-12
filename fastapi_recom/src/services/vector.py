@@ -3,7 +3,6 @@ from uuid import UUID
 from dataclasses import dataclass
 
 from sqlalchemy import select
-from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.models.actions import Actions
 from src.models.film import Movies
@@ -11,21 +10,20 @@ from src.models.rating import Ratings
 from src.models_ml.film import MovieVector
 from src.models_ml.user import UserVector
 from src.crud.base import CRUDBase
-
+from sqlalchemy.ext.asyncio import AsyncSession
 
 @dataclass
 class VectorService:
-    session: AsyncSession
     user_vector_crud = CRUDBase(UserVector)
     movie_vector_crud = CRUDBase(MovieVector)
 
-    async def compute_user_vector(self, user_id: UUID) -> dict:
+    async def compute_user_vector(self, user_id: UUID, session: AsyncSession) -> dict:
 
         ratings_query = select(Ratings).where(Ratings.user_id == user_id)
-        ratings = (await self.session.execute(ratings_query)).scalars().all()
+        ratings = (await session.execute(ratings_query)).scalars().all()
 
         actions_query = select(Actions).where(Actions.user_id == user_id)
-        actions = (await self.session.execute(actions_query)).scalars().all()
+        actions = (await session.execute(actions_query)).scalars().all()
 
         vector = defaultdict(float)
         genre_ratings = defaultdict(list)
@@ -68,3 +66,6 @@ class VectorService:
         await self.session.commit()
 
         return vector
+
+
+vector_service = VectorService()

@@ -15,6 +15,8 @@ class Movies(Base):
 
     genres: Mapped[List["Genre"]] = relationship(
         secondary="movie_genre",
+        primaryjoin="Movies.id == MovieGenre.movie_id",
+        secondaryjoin="Genre.id == MovieGenre.genre_id",
         back_populates="movies"
     )
 

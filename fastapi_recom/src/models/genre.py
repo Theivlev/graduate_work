@@ -7,8 +7,13 @@ from src.db.postgres import Base
 
 
 class Genre(Base):
-    """Модель жанра"""
+    __tablename__ = "genres"
+
+    genre_movies: Mapped[List["MovieGenre"]] = relationship(back_populates="genre")
+
     movies: Mapped[List["Movies"]] = relationship(
-        "Movies",
-        back_populates="genre"
+        secondary="movie_genre",
+        primaryjoin="Genre.id == MovieGenre.genre_id",
+        secondaryjoin="Movies.id == MovieGenre.movie_id",
+        back_populates="genres"
     )
