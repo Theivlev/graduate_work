@@ -44,6 +44,9 @@ async def actions_user(
 
             user_id = UUID(message.user_id) if isinstance(message.user_id, str) else message.user_id
             movie_id = UUID(message.movies_id) if isinstance(message.movies_id, str) else message.movies_id
+            logger.info(f'ЗАХОДИММММММ')
+            await actions_service.save_action(action_dto=message, session=session)
+            return
             await vector_service.compute_user_vector(user_id, session=session)
             await vector_service.compute_movie_vector(movie_id)
 

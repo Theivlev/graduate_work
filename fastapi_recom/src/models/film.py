@@ -14,6 +14,7 @@ class Movies(Base):
     genre_id: Mapped[UUID] = mapped_column(ForeignKey("genres.id"))
 
     genres: Mapped[List["Genre"]] = relationship(
+        "genres",
         secondary="movie_genre",
         primaryjoin="Movies.id == MovieGenre.movie_id",
         secondaryjoin="Genre.id == MovieGenre.genre_id",
@@ -22,5 +23,7 @@ class Movies(Base):
 
 
 class MovieGenre(Base):
+    __tablename__ = "movie_genre"
+
     movie_id: Mapped[UUID] = mapped_column(ForeignKey("movies.id"), primary_key=True)
     genre_id: Mapped[UUID] = mapped_column(ForeignKey("genres.id"), primary_key=True)
