@@ -46,19 +46,19 @@ async def actions_user(
             movie_id = UUID(message.movie_id) if isinstance(message.movie_id, str) else message.movie_id
             await actions_service.save_action(action_dto=message, session=session)
             return
-            await vector_service.compute_user_vector(user_id, session=session)
-            await vector_service.compute_movie_vector(movie_id)
+            # await vector_service.compute_user_vector(user_id, session=session)
+            # await vector_service.compute_movie_vector(movie_id)
 
-            users = (await session.execute(select(Users))).scalars().all()
-            for other_user in users:
-                if other_user.id != user_id:
-                    await similarity_service.compute_user_similarity(user_id, other_user.id)
+            # users = (await session.execute(select(Users))).scalars().all()
+            # for other_user in users:
+            #     if other_user.id != user_id:
+            #         await similarity_service.compute_user_similarity(user_id, other_user.id)
 
-            movies = (await session.execute(select(Movies))).scalars().all()
-            for other_movie in movies:
-                if other_movie.id != movie_id:
-                    await similarity_service.compute_movie_similarity(movie_id, other_movie.id)
+            # movies = (await session.execute(select(Movies))).scalars().all()
+            # for other_movie in movies:
+            #     if other_movie.id != movie_id:
+            #         await similarity_service.compute_movie_similarity(movie_id, other_movie.id)
 
-            await session.commit()
+            # await session.commit()
     except Exception as e:
         print(f"Ошибка при обработке сообщения: {e}")
