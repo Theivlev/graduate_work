@@ -12,7 +12,7 @@ from src.rabbitmq.exchanges import EXCHANGES
 from src.rabbitmq.queues import QUEUES
 
 
-from src.sсhemas.actions_user import ActionsUserDTO
+from src.schemas.actions_user import ActionsUserDTO
 from src.models.film import Movies
 from src.models.user import Users
 from src.services.actions import actions_service
@@ -45,7 +45,7 @@ async def actions_user(
             await actions_service.save_action(action_dto=message, session=session)
 
             await vector_service.compute_user_vector(
-                movie_id=message.user_id,
+                user_id=message.user_id,
                 session=session
             )
             await vector_service.compute_movie_vector(
@@ -58,7 +58,7 @@ async def actions_user(
                 if other_user.id != message.user_id:
                     await similarity_service.compute_user_similarity(
                         user1_id=message.user_id,
-                        user2_id=other_user,
+                        user2_id=other_user.id,
                         session=session
                     )
 
