@@ -1,4 +1,10 @@
-class UserSimilarityBase(BaseModel):
+from uuid import UUID
+
+
+from .dto import AbstractDTO
+
+
+class UserSimilarityBase(AbstractDTO):
     user1_id: UUID
     user2_id: UUID
     similarity: float
@@ -9,11 +15,10 @@ class UserSimilarityCreate(UserSimilarityBase):
 
 
 class UserSimilaritySchema(UserSimilarityBase):
-    class Config:
-        from_attributes = True
+    pass
 
 
-class MovieSimilarityBase(BaseModel):
+class MovieSimilarityBase(AbstractDTO):
     movie1_id: UUID
     movie2_id: UUID
     similarity: float
@@ -24,5 +29,4 @@ class MovieSimilarityCreate(MovieSimilarityBase):
 
 
 class MovieSimilaritySchema(MovieSimilarityBase):
-    class Config:
-        from_attributes = True
+    pass
