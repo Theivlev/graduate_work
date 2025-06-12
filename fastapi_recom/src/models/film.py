@@ -1,4 +1,3 @@
-from uuid import UUID
 from typing import List
 
 from sqlalchemy import ForeignKey
