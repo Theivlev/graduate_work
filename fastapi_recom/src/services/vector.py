@@ -12,6 +12,7 @@ from src.models_ml.user import UserVector
 from src.crud.base import CRUDBase
 from sqlalchemy.ext.asyncio import AsyncSession
 
+
 @dataclass
 class VectorService:
     user_vector_crud = CRUDBase(UserVector)
@@ -31,7 +32,7 @@ class VectorService:
 
         for rating in ratings:
             movie_query = select(Movies).where(Movies.id == rating.movie_id)
-            movie = (await self.session.execute(movie_query)).scalars().first()
+            movie = (await session.execute(movie_query)).scalars().first()
             if movie:
                 for genre in movie.genres:
                     genre_ratings[genre.id].append(rating.rating)
@@ -46,14 +47,14 @@ class VectorService:
             vector[f"views_{genre_id}"] = genre_views[genre_id]
 
         user_vector = UserVector(user_id=user_id, vector_data=dict(vector))
-        await self.user_vector_crud.create(self.session, user_vector)
-        await self.session.commit()
+        await self.user_vector_crud.create(obj_in=user_vector, session=session)
+        await session.commit()
 
         return dict(vector)
 
-    async def compute_movie_vector(self, movie_id: UUID) -> dict:
+    async def compute_movie_vector(self, movie_id: UUID, session: AsyncSession) -> dict:
         movie_query = select(Movies).where(Movies.id == movie_id)
-        movie = (await self.session.execute(movie_query)).scalars().first()
+        movie = (await session.execute(movie_query)).scalars().first()
 
         vector = {}
         if movie:
@@ -62,8 +63,11 @@ class VectorService:
                 vector[f"genre_{genre.id}"] = 1.0
 
         movie_vector = MovieVector(movie_id=movie_id, vector_data=vector)
-        await self.movie_vector_crud.create(self.session, movie_vector)
-        await self.session.commit()
+        await self.movie_vector_crud.create(
+            obj_in=movie_vector,
+            session=session
+        )
+        await session.commit()
 
         return vector
 

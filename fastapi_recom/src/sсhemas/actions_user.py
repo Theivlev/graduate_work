@@ -5,8 +5,8 @@ from .dto import AbstractDTO
 
 
 class ActionsUserDTO(AbstractDTO):
-    user_id: UUID | str
-    movie_id: UUID | str
+    user_id: UUID
+    movie_id: UUID
     action: str | dict
     event_time: datetime
     event_data: str | dict
