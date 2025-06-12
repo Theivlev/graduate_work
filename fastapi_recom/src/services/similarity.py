@@ -58,7 +58,7 @@ class SimilarityService:
         similarity = cosine_similarity([vec1], [vec2])[0][0]
 
         movie_similarity = MovieSimilarity(movie1_id=movie1_id, movie2_id=movie2_id, similarity=similarity)
-        await self.movie_similarity_crud.create(session, movie_similarity)
+        await self.movie_similarity_crud.create(obj_in=movie_similarity, session=session)
         await session.commit()
 
         return similarity

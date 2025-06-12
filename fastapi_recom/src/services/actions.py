@@ -6,14 +6,14 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.crud.base import CRUDBase
 from src.models.actions import Actions
-from src.sсhemas.actions_user import ActionsUserDTO
+from src.schemas.actions_user import ActionsUserDTO
 from src.models.rating import Ratings
 from sqlalchemy import select, update, func
 from src.models.film import Movies
 from src.models.user import Users
-from src.sсhemas.movies import MovieSchema
-from src.sсhemas.rating import RatingSchema
-from src.sсhemas.user import UserSchema
+from src.schemas.movies import MovieSchema
+from src.schemas.rating import RatingSchema
+from src.schemas.user import UserSchema
 
 
 import logging
