@@ -25,4 +25,4 @@ jobs:
 
     - name: Run mypy
       run: |
-        mypy --disable-error-code=import-untyped,valid-type,assign,attr-defined,index,annotation-unchecked .
+        mypy --explicit-package-bases --disable-error-code=import-untyped,valid-type,assignment,attr-defined,index .
