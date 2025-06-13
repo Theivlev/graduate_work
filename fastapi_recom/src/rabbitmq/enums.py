@@ -3,6 +3,7 @@ from enum import StrEnum
 
 class RoutingKeys(StrEnum):
     ACTIONS = 'actions'
+    RECOMMENDATIONS = "recommendations"
 
 
 class ExchangeType(StrEnum):

@@ -13,4 +13,8 @@ QUEUES = {
             "x-dead-letter-routing-key": DLQ_ROUTING_KEYS[RoutingKeys.ACTIONS],
         }
     ),
+    RoutingKeys.RECOMMENDATIONS: RabbitQueue(
+        name=RoutingKeys.RECOMMENDATIONS.value,
+        durable=True,
+    ),
 }

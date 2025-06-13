@@ -4,10 +4,6 @@ from fastapi.encoders import jsonable_encoder
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-import logging
-logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
-logger = logging.getLogger(__name__)
-
 
 class CRUDBase:
     def __init__(self, model):
@@ -24,7 +20,6 @@ class CRUDBase:
     async def create(self, obj_in, session: AsyncSession):
         obj_in_data = obj_in.model_dump()
         db_obj = self.model(**obj_in_data)
-        logger.info(f'Ждем объект vector {type(obj_in)}')
         session.add(db_obj)
         await session.commit()
         await session.refresh(db_obj)

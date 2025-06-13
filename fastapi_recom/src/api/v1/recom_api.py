@@ -4,6 +4,10 @@ from fastapi import APIRouter, Depends
 from src.services.recomendation import get_recommendation, RecomendationService
 from src.schemas.recomendation import GeneralRecommendationResponseDTO, UserRecommendationResponseDTO
 from uuid import UUID
+from src.rabbitmq.queues import QUEUES
+from src.rabbitmq.exchanges import EXCHANGES
+from src.rabbitmq.producer import publish
+from src.rabbitmq.enums import RoutingKeys
 
 router = APIRouter()
 
@@ -19,7 +23,13 @@ async def get_user_recom(
     user_id: UUID,
     recommendation_service: RecomendationService = Depends(get_recommendation),
 ):
-    return await recommendation_service.get_recommendations(user_id=user_id)
+    recommendation = await recommendation_service.get_recommendations(user_id=user_id)
+    await publish(
+        message=recommendation,
+        queue=QUEUES[RoutingKeys.RECOMMENDATIONS],
+        exchange=EXCHANGES[RoutingKeys.RECOMMENDATIONS],
+    )
+    return recommendation
 
 
 @router.get(
@@ -32,4 +42,10 @@ async def get_user_recom(
 async def get_general_recom(
     recommendation_service: RecomendationService = Depends(get_recommendation),
 ):
-    return await recommendation_service.get_general_recommendations()
+    recommendation = await recommendation_service.get_general_recommendations()
+    await publish(
+        message=recommendation,
+        queue=QUEUES[RoutingKeys.RECOMMENDATIONS],
+        exchange=EXCHANGES[RoutingKeys.RECOMMENDATIONS],
+    )
+    return recommendation
