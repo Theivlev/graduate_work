@@ -1,8 +1,10 @@
 from fastapi_cache.decorator import cache
 
-from fastapi import APIRouter, Depends, UUID4
+from fastapi import APIRouter, Depends
 from src.services.recomendation import get_recommendation, RecomendationService
 from src.schemas.recomendation import GeneralRecommendationResponseDTO, UserRecommendationResponseDTO
+from uuid import UUID
+
 router = APIRouter()
 
 
@@ -14,7 +16,7 @@ router = APIRouter()
 )
 @cache(expire=30)
 async def get_user_recom(
-    user_id: UUID4,
+    user_id: UUID,
     recommendation_service: RecomendationService = Depends(get_recommendation),
 ):
     return await recommendation_service.get_recommendations(user_id=user_id)

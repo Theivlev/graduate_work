@@ -3,39 +3,25 @@ from typing import List
 from uuid import UUID
 
 from fastapi import Depends
-from sqlalchemy import select
+from sqlalchemy import select, func
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from src.crud.base import CRUDBase
 from src.db.postgres import get_async_session
 from src.models.rating import Ratings
 from src.models.film import Movies
 from src.models_ml.film import MovieSimilarity
 from src.models_ml.user import UserSimilarity
 
-
-def get_recommendation(session: AsyncSession = Depends(get_async_session)) -> "RecomendationService":
-    """Функция для получения истории входов."""
-    return RecomendationService(session)
-
-
-from dataclasses import dataclass
-from typing import List
-from uuid import UUID
-
-from sqlalchemy import select
-from sqlalchemy.ext.asyncio import AsyncSession
-
-from src.crud.base import CRUDBase
-from src.models.rating import Ratings
-from src.models.film import Movies
-from src.models_ml.film import MovieSimilarity
-from src.models_ml.user import UserSimilarity
 from src.schemas.recomendation import (
     MovieRecommendationDTO,
     UserRecommendationResponseDTO,
     GeneralRecommendationResponseDTO
 )
+
+
+def get_recommendation(session: AsyncSession = Depends(get_async_session)) -> "RecomendationService":
+    """Функция для получения истории входов."""
+    return RecomendationService(session)
 
 
 @dataclass
@@ -67,9 +53,21 @@ class RecomendationService:
         )
 
     async def get_general_recommendations(self, limit: int = 10) -> GeneralRecommendationResponseDTO:
-        popular_movies = (await self.session.execute(
-            select(Movies).where(Movies.imdb_rating >= 7.0).order_by(Movies.ratings.desc()).limit(10)
-        )).scalars().all()
+        subquery = (
+            select(Ratings.movie_id)
+            .group_by(Ratings.movie_id)
+            .having(func.avg(Ratings.rating) >= 7.0)
+            .subquery()
+        )
+
+        stmt = (
+            select(Movies)
+            .join(subquery, Movies.id == subquery.c.movie_id)
+            .limit(10)
+        )
+
+        result = await self.session.execute(stmt)
+        popular_movies = result.scalars().all()
 
         recommended_movie_ids = set()
 
