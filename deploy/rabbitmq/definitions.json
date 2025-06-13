@@ -52,6 +52,14 @@
       "durable": true,
       "auto_delete": false,
       "internal": false
+    },
+    {
+      "name": "actions",
+      "vhost": "/",
+      "type": "direct",
+      "durable": true,
+      "auto_delete": false,
+      "internal": false
     }
   ],
   "queues": [
@@ -87,6 +95,12 @@
       "vhost": "/",
       "durable": true,
       "auto_delete": false
+    },
+    {
+      "name": "actions",
+      "vhost": "/",
+      "durable": true,
+      "auto_delete": false
     }
   ],
   "bindings": [
@@ -117,6 +131,13 @@
       "destination": "ws_queue",
       "destination_type": "queue",
       "routing_key": "ws"
+    },
+    {
+      "source": "actions",
+      "vhost": "/",
+      "destination": "actions",
+      "destination_type": "queue",
+      "routing_key": "actions"
     }
   ]
 }

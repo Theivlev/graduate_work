@@ -14,3 +14,4 @@ python-json-logger==2.0.4
 beanie>=1.27.0
 kafka-python==2.0.6
 aiokafka==0.10.0
+aio-pika==9.5.5

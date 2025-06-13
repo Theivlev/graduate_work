@@ -62,7 +62,19 @@ class KafkaSettings(BaseSettings):
     model_config = SettingsConfigDict(env_file=".env", extra="ignore", env_prefix="KAFKA_")
 
 
+class RabbitMQSettings(BaseSettings):
+    """Настройки RabbitMQ."""
+
+    host: str
+    user: str
+    password: str
+    port: int
+
+    model_config = SettingsConfigDict(env_file=".env", extra="ignore", env_prefix="RABBITMQ_")
+
+
 project_settings = ProjectSettings()  # type: ignore
 mongo_settings = MongoSettings()  # type: ignore
 auth_grpc_settings = AuthGrpcSettings()  # type: ignore
 kafka_settings = KafkaSettings()  # type: ignore
+rabbit_mq_settings = RabbitMQSettings()  # type: ignore
