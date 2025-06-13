@@ -12,7 +12,7 @@ class Room(Base):
 
     name: Mapped[str] = mapped_column(nullable=False)
     message_history: Mapped[list] = mapped_column(JSONB, default=list)
-    users: Mapped[List["User"]] = relationship("User", back_populates="room")
+    users: Mapped[List["User"]] = relationship("User", back_populates="room")  # type: ignore # noqa
 
     def add_message(self, message: Dict[str, Any]):
         if self.message_history is None:

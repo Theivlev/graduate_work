@@ -2,7 +2,7 @@
 from datetime import datetime
 from uuid import UUID
 
-from src.models.dto import AbstractDTO
+from src.schemas.dto import AbstractDTO
 
 
 class MessageCreate(AbstractDTO):
@@ -10,6 +10,8 @@ class MessageCreate(AbstractDTO):
 
 
 class MessageResponse(MessageCreate):
+    """Схема сообщений."""
+
     id: UUID
     created_at: datetime
     room_id: UUID

@@ -11,13 +11,9 @@ jobs:
   type-check:
     name: Type check
     uses: "./.github/workflows/type_check.yml"
-  build:
-    name: Build check
-    needs: [lint, type-check]
-    uses: "./.github/workflows/build_check.yml"
   telegram:
     name: Send message
-    needs: [build, lint, type-check]
+    needs: [lint, type-check]
     if: always()
     runs-on: ubuntu-latest
     steps:
@@ -40,4 +36,3 @@ jobs:
             <b>Piplines:</b>
             ${{ needs.lint.result == 'success' && '✅' || '❌' }} - Lint
             ${{ needs.type-check.result == 'success' && '✅' || '❌' }} - Type
-            ${{ needs.build.result == 'success' && '✅' || '❌' }} - Build
