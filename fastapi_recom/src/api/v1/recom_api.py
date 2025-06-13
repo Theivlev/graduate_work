@@ -8,8 +8,8 @@ router = APIRouter()
 
 @router.get(
     "/user/{user_id}",
-    summary="Get user recommendations",
-    description="Get personalized recommendations based on user preferences.",
+    summary="Получить рекомендации для пользователя",
+    description="Получить персонализированные рекомендации на основе предпочтений пользователя.",
     response_model=UserRecommendationResponseDTO
 )
 @cache(expire=30)
@@ -22,8 +22,8 @@ async def get_user_recom(
 
 @router.get(
     "/general",
-    summary="Get general recommendations",
-    description="Get top recommendations based on popular and similar movies.",
+    summary="Получить общие рекомендации",
+    description="Получить топовые рекомендации на основе популярных и похожих фильмов.",
     response_model=GeneralRecommendationResponseDTO
 )
 @cache(expire=60)
