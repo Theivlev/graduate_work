@@ -5,12 +5,13 @@ from etl.extract.kafka_read import KafkaReader
 from etl.load.clickhouse_writer import ClickHouseWriter
 from etl.transform.data_transform import MessagesTransformer
 from utils.backoff import backoff
+from core.config import settings
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s")
 
 
 @backoff(start_sleep_time=0.1, factor=2, border_sleep_time=10)
-async def run_etl(writer: ClickHouseWriter, batch_size: int = 10):
+async def run_etl(writer: ClickHouseWriter, batch_size: int = settings.load_batch_size):
     async with KafkaReader() as reader:
         transformer = MessagesTransformer()
 

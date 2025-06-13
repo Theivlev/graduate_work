@@ -6,7 +6,7 @@ from core.config import smtp_settings
 from services.template import get_template
 
 
-async def send_email_smtp(email, subject, template, data):
+async def send_email_smtp(email: str, subject: str, template: str, data: dict):
     body = get_template(template, data)
 
     msg = MIMEMultipart()

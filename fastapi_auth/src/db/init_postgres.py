@@ -31,9 +31,9 @@ async def create_first_superuser():
         async with get_user_db_context(session) as user_db:
             async with get_user_manager_context(user_db) as user_manager:
                 try:
-                    user = await user_manager.get_by_email(auth_settings.first_superuser_email)
+                    await user_manager.get_by_email(auth_settings.first_superuser_email)
                 except UserNotExists:
-                    user = await user_manager.create(
+                    await user_manager.create(
                         UserCreate(
                             email=auth_settings.first_superuser_email,
                             password=auth_settings.first_superuser_password,

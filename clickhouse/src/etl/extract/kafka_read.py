@@ -33,9 +33,9 @@ class KafkaReader(BaseMessageReader):
             await self.consumer.stop()
             logging.info("KafkaConsumer успешно остановлен.")
 
-    async def read(self, batch_size: int = 10) -> AsyncGenerator[List[bytes], None]:
+    async def read(self, batch_size: int = settings.load_batch_size) -> AsyncGenerator[List[bytes], None]:
         messages = []
-        logging.info("Начало чтения сообщений...")
+        logging.info(f"Начало чтения сообщений по {batch_size}...")
         try:
             logging.info("Начинаю цикл...")
             async for message in self.consumer:

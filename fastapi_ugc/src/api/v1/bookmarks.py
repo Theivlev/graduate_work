@@ -5,9 +5,9 @@ from fastapi.params import Security
 from pymongo.errors import DuplicateKeyError
 from src.auth_server.schemas.models import TokenValidationResult
 from src.auth_server.security import require_valid_token
-from src.crud.base import BaseMongoCRUD
 from src.models.bookmark import UserBookmarks
 from src.paginations.pagination import PaginationLimits
+from src.services.base import BaseService
 from src.services.bookmarks import get_bookmark_service
 from src.shemas.user_bookmarks import UserBookmarkCreateDTO, UserBookmarkResponse
 from src.utils.check_bookmark import validate_bookmark_exists
@@ -27,7 +27,7 @@ router = APIRouter()
 async def get_bookmarks_films(
     user_id: str,
     pagination: Tuple[int, int] = Depends(PaginationLimits.get_pagination_params),
-    service: BaseMongoCRUD = Depends(get_bookmark_service),
+    service: BaseService = Depends(get_bookmark_service),
     token_payload: TokenValidationResult = Security(require_valid_token),
 ):
     """
@@ -59,7 +59,7 @@ async def get_bookmarks_films(
 )
 async def add_bookmarks_films(
     bookmark_data: UserBookmarkCreateDTO,
-    service: BaseMongoCRUD = Depends(get_bookmark_service),
+    service: BaseService = Depends(get_bookmark_service),
     token_payload: TokenValidationResult = Security(require_valid_token),
 ):
     ensure_user_owns_resource(bookmark_data.user_id, token_payload.user_id, "добавить закладку")
@@ -79,13 +79,13 @@ async def add_bookmarks_films(
 )
 async def remove_bookmark(
     bookmark: UserBookmarks = Depends(validate_bookmark_exists),
-    service: BaseMongoCRUD = Depends(get_bookmark_service),
+    service: BaseService = Depends(get_bookmark_service),
     token_payload: TokenValidationResult = Security(require_valid_token),
 ):
     ensure_user_owns_resource(bookmark.user_id, token_payload.user_id, "удалить закладку")
 
     try:
-        success = await service.delete(str(bookmark.id))
+        success = await service.delete(str(bookmark.id), token_payload.user_id)
         if not success:
             raise HTTPException(status_code=404, detail="Закладка не найдена")
         return {"message": "Закладка успешно удалена"}

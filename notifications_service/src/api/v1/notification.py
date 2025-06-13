@@ -1,5 +1,4 @@
 from typing import List, Tuple
-from uuid import UUID
 
 from src.paginations.pagination import PaginationLimits
 from src.service.notifications import NotificationsService, get_notifications_service
@@ -7,6 +6,9 @@ from src.shemas.delivery import DeliveryDTO
 from src.shemas.notifications_history import NotificationRecordResponse
 
 from fastapi import APIRouter, Depends, HTTPException, Response, status
+
+# from uuid import UUID
+
 
 router = APIRouter()
 

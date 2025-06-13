@@ -5,9 +5,10 @@ Revises: cf9ba141e72d
 Create Date: 2025-05-10 07:01:03.057228
 
 """
-import sqlalchemy as sa
 from alembic import op
 from sqlalchemy.exc import SQLAlchemyError
+
+# import sqlalchemy as sa
 from sqlalchemy.sql import text
 
 # revision identifiers, used by Alembic.
@@ -42,7 +43,7 @@ def upgrade():
 
 
 def downgrade():
-    onnection = op.get_bind()
+    # сonnection = op.get_bind()
     device_types = ["smart", "mobile", "web"]
     for device_type in device_types:
         partition_table_name = f"auth.auth_history_{device_type}"

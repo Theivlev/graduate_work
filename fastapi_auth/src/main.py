@@ -30,7 +30,7 @@ async def lifespan(app: FastAPI):
         await redis_cache_manager.setup()
         await rabbitmq_producer.setup()
         yield
-    except Exception as e:
+    except Exception:
         import traceback
 
         traceback.print_exc()
