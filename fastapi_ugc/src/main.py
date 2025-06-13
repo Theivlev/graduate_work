@@ -1,9 +1,8 @@
 from contextlib import asynccontextmanager
 
+from broker.kafka import kafka_producer
 from fastapi.responses import ORJSONResponse
 from motor.motor_asyncio import AsyncIOMotorClient
-
-from broker.kafka import kafka_producer
 from src.api.routers import main_router
 from src.core.config import mongo_settings, project_settings
 
@@ -40,3 +39,17 @@ app = FastAPI(
 )
 
 app.include_router(main_router)
+
+
+# @app.middleware("http")
+# async def before_request(request: Request, call_next):
+#     request_id = request.headers.get("X-Request-Id")
+#     if not request_id:
+#         return ORJSONResponse(status_code=status.HTTP_400_BAD_REQUEST, content={"detail": "X-Request-Id is required"})
+#     request_id_var.set(request_id)
+#     try:
+#         response = await call_next(request)
+#         response.headers["X-Request-Id"] = request_id
+#         return response
+#     finally:
+#         request_id_var.set(None)

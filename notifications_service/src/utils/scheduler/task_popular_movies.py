@@ -1,7 +1,8 @@
-import logging
-import datetime
-from datetime import timedelta
 import asyncio
+import datetime
+import logging
+from datetime import timedelta
+
 from src.service.notifications import get_notifications_service
 from src.shemas.delivery import DeliveryDTO
 
@@ -21,10 +22,7 @@ async def weekly_messages(expiration_days: int = 2, retry_count: int = MAX_RETRI
         exp_date = datetime.datetime.now(tz=datetime.timezone.utc) + timedelta(days=expiration_days)
         delivery_data = DeliveryDTO(
             notification="popular_movies",
-            data_store={
-                "expiration_date": exp_date.strftime("%d-%m-%Y"),
-                "timezone": TIMEZONE
-            }
+            data_store={"expiration_date": exp_date.strftime("%d-%m-%Y"), "timezone": TIMEZONE},
         )
         service = get_notifications_service()
         if not service:
@@ -42,9 +40,7 @@ async def weekly_messages(expiration_days: int = 2, retry_count: int = MAX_RETRI
                     )
                     await asyncio.sleep(RETRY_DELAY)
                 else:
-                    logger.error(
-                        f"Не удалось отправить уведомление после {retry_count} попыток. Ошибка: {str(e)}"
-                    )
+                    logger.error(f"Не удалось отправить уведомление после {retry_count} попыток. Ошибка: {str(e)}")
 
     except Exception as outer_error:
         logger.error(f"Критическая ошибка в задаче weekly_messages: {str(outer_error)}", exc_info=True)

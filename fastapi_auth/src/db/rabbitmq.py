@@ -32,13 +32,7 @@ class RabbitMQManager:
         if self.connection:
             await self.connection.close()
 
-    async def publish(
-        self,
-        message: str,
-        exchange_name: str,
-        routing_key: str,
-        queue_durable: bool = True
-    ) -> None:
+    async def publish(self, message: str, exchange_name: str, routing_key: str, queue_durable: bool = True) -> None:
         """Отправка сообщения в указанный exchange с routing key."""
         exchange = await self.channel.get_exchange(exchange_name)
         await exchange.publish(

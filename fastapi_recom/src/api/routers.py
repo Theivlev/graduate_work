@@ -4,4 +4,4 @@ from fastapi import APIRouter
 
 API_V1: str = "/recom/v1"
 main_router = APIRouter()
-main_router.include_router(recom_router, prefix=f"{API_V1}/recom", tags=["recomendations"])
+main_router.include_router(recom_router, prefix=API_V1, tags=["recomendations"])

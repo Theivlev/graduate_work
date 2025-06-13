@@ -1,4 +1,4 @@
-from src.api.v1 import auth_history_router, role_router, user_router, email_confirm_router
+from src.api.v1 import auth_history_router, email_confirm_router, role_router, user_router
 
 from fastapi import APIRouter
 

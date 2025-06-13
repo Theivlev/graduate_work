@@ -1,41 +1,42 @@
 version: '3.8'
 
 services:
-  fastapi1:
-    image: alpine
-    stdin_open: true
-    tty: true
+  # fastapi1:
+  #   image: alpine
+  #   stdin_open: true
+  #   tty: true
 
-  fastapi2:
-    image: alpine
-    stdin_open: true
-    tty: true
+  # fastapi2:
+  #   image: alpine
+  #   stdin_open: true
+  #   tty: true
 
-  fastapi_auth1:
-    image: alpine
-    stdin_open: true
-    tty: true
+  # fastapi_auth1:
+  #   image: alpine
+  #   stdin_open: true
+  #   tty: true
 
-  fastapi_auth2:
-    image: alpine
-    stdin_open: true
-    tty: true
+  # fastapi_auth2:
+  #   image: alpine
+  #   stdin_open: true
+  #   tty: true
 
-  fastapi_ugc:
-    image: alpine
-    stdin_open: true
-    tty: true
+  # fastapi_ugc:
+  #   image: alpine
+  #   stdin_open: true
+  #   tty: true
 
-  fastapi_ws:
-    image: alpine
-    stdin_open: true
-    tty: true
+  # fastapi_ws:
+  #   image: alpine
+  #   stdin_open: true
+  #   tty: true
 
   fastapi_recom:
     build:
       context: ./fastapi_recom
       dockerfile: Dockerfile
     container_name: fastapi_recom
+    restart: always
     ports:
       - "8050:8050"
     env_file:
@@ -43,6 +44,23 @@ services:
     depends_on:
       - redis
       - theatre-db
+
+  rabbitmq:
+    image: rabbitmq:3.10.7-management
+    restart: always
+    env_file:
+      - .env
+    ports:
+      - "15672:15672"
+      - "5672:5672"
+    volumes:
+      - rabbitmq:/var/lib/rabbitmq
+    command: >
+      sh -c "
+      rabbitmq-plugins enable rabbitmq_federation &&
+      rabbitmq-plugins enable rabbitmq_federation_management &&
+      rabbitmq-server
+      "
 
   redis:
     image: redislabs/redismod:latest
@@ -68,20 +86,21 @@ services:
     image: nginx:latest
     container_name: nginx
     volumes:
-      - /tmp/logs/nginx/:/var/log/nginx/
+      - ./logs/nginx/:/var/log/nginx/
       - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
       - ./nginx/configs:/etc/nginx/conf.d:ro
     depends_on:
       - fastapi_recom
-      - fastapi1
-      - fastapi2
-      - fastapi_auth1
-      - fastapi_auth2
-      - fastapi_ugc
-      - fastapi_ws
+      # - fastapi1
+      # - fastapi2
+      # - fastapi_auth1
+      # - fastapi_auth2
+      # - fastapi_ugc
+      # - fastapi_ws
     ports:
       - "80:80"
 
 volumes:
   postgres_data:
   redis_data:
+  rabbitmq:

@@ -6,10 +6,10 @@ from uuid import UUID
 from sqlalchemy.ext.asyncio import AsyncSession
 from src.crud.base import CRUDBase
 from src.crud.user_crud import UserCrud
+from src.db.postgres import get_async_session
 from src.models.user import User
 from src.schemas.role_schema import RoleGetFull
 from src.services.role_service import RoleService
-from src.db.postgres import get_async_session
 
 from fastapi import HTTPException
 
