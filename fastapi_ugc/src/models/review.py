@@ -1,12 +1,13 @@
 from datetime import datetime, timezone
 from uuid import UUID
 
-from beanie import Document
 from pydantic import Field
+
+from src.models.base import BaseDocument
 from src.models.mixins import PyObjectId
 
 
-class UserReviews(Document):
+class UserReviews(BaseDocument):
     """Модель для коллекции 'user_reviews'."""
 
     id: PyObjectId = Field(default_factory=PyObjectId, alias="_id")

@@ -2,13 +2,13 @@ from typing import List, Tuple
 from uuid import UUID
 
 from pymongo.errors import DuplicateKeyError
-from src.crud.base import BaseMongoCRUD
 from src.models.review import UserReviews
 from src.paginations.pagination import PaginationLimits
+from src.services.base import BaseService
 from src.services.reviews import get_reviews_service
 from src.shemas.user_reviews import UserReviewCreateDTO, UserReviewResponse
 from src.utils.check_review import validate_review_exists
-from src.auth_server.schemas.models import TokenValidationResult    
+from src.auth_server.schemas.models import TokenValidationResult
 from src.auth_server.security import require_valid_token
 from src.utils.security import ensure_user_owns_resource
 
@@ -27,7 +27,7 @@ router = APIRouter()
 async def get_reviews_films(
     user_id: str,
     pagination: Tuple[int, int] = Depends(PaginationLimits.get_pagination_params),
-    service: BaseMongoCRUD = Depends(get_reviews_service),
+    service: BaseService = Depends(get_reviews_service),
 ):
     """
     Получить список рецензий.
@@ -58,7 +58,7 @@ async def get_reviews_films(
 )
 async def get_review_films(
     review_id: str,
-    service: BaseMongoCRUD = Depends(get_reviews_service),
+    service: BaseService = Depends(get_reviews_service),
 ):
     """
     Получить рецензию.
@@ -86,7 +86,7 @@ async def get_review_films(
 )
 async def add_reviews_films(
     review_data: UserReviewCreateDTO,
-    service: BaseMongoCRUD = Depends(get_reviews_service),
+    service: BaseService = Depends(get_reviews_service),
     token_payload: TokenValidationResult = Security(require_valid_token),
 ):
     """
@@ -114,14 +114,14 @@ async def add_reviews_films(
 )
 async def remove_review(
     review: UserReviews = Depends(validate_review_exists),
-    service: BaseMongoCRUD = Depends(get_reviews_service),
+    service: BaseService = Depends(get_reviews_service),
     token_payload: TokenValidationResult = Security(require_valid_token),
 ):
     """
     Удалить рецензию.
     """
     ensure_user_owns_resource(review.user_id, token_payload.user_id, "удалить рецензию")
-    
+
     try:
         success = await service.delete(str(review.id))
         if not success:
@@ -143,7 +143,7 @@ async def remove_review(
 async def update_review(
     review_text: str,
     review: UserReviews = Depends(validate_review_exists),
-    service: BaseMongoCRUD = Depends(get_reviews_service),
+    service: BaseService = Depends(get_reviews_service),
     token_payload: TokenValidationResult = Security(require_valid_token),
 ):
     """
