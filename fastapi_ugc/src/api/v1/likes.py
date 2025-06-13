@@ -18,6 +18,7 @@ from fastapi.params import Security
 
 router = APIRouter()
 
+
 @router.get(
     "/",
     response_model=List[UserLikeResponse],

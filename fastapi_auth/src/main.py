@@ -23,7 +23,7 @@ async def lifespan(app: FastAPI):
     try:
         redis_cache_manager = RedisCacheManager(redis_settings)
         redis_client = await RedisClientFactory.create(redis_settings.dsn)
-    
+
         await create_database(redis_client)
         await create_first_superuser()
         await redis_cache_manager.setup()
