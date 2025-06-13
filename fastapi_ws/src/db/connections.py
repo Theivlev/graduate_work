@@ -1,6 +1,5 @@
 import time
 from contextlib import asynccontextmanager
-from typing import Optional
 from uuid import UUID
 
 from sqlalchemy import select
@@ -77,7 +76,7 @@ class ConnectionManager:
         except Exception:
             return False
 
-    async def _safe_disconnect(self, room_id: UUID, user_id: UUID, db: AsyncSession, username: Optional[str]):
+    async def _safe_disconnect(self, room_id: UUID, user_id: UUID, db: AsyncSession, username: str):
         """Закрытие вебсокет сессии."""
         try:
             if room_id in self.active_connections and user_id in self.active_connections[room_id]:
@@ -147,7 +146,7 @@ class ConnectionManager:
                 payload["is_self"] = uid == sender_id
                 await websocket.send_json(payload)
             except WebSocketDisconnect:
-                await self._safe_disconnect(room_id, uid, None)
+                await self._safe_disconnect(room_id, uid, None, user.name)
 
     async def send_users_update(self, room_id: UUID, db: AsyncSession):
         if room_id not in self.active_connections:
