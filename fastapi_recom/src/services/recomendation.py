@@ -19,52 +19,59 @@ def get_recommendation(session: AsyncSession = Depends(get_async_session)) -> "R
     return RecomendationService(session)
 
 
+from dataclasses import dataclass
+from typing import List
+from uuid import UUID
+
+from sqlalchemy import select
+from sqlalchemy.ext.asyncio import AsyncSession
+
+from src.crud.base import CRUDBase
+from src.models.rating import Ratings
+from src.models.film import Movies
+from src.models_ml.film import MovieSimilarity
+from src.models_ml.user import UserSimilarity
+from src.schemas.recomendation import (
+    MovieRecommendationDTO,
+    UserRecommendationResponseDTO,
+    GeneralRecommendationResponseDTO
+)
+
+
 @dataclass
 class RecomendationService:
     session: AsyncSession
-    auth: CRUDBase = CRUDBase(UserSimilarity)
-    rating: CRUDBase = CRUDBase(MovieSimilarity)
 
-    async def get_recommendations(self, user_id: UUID, limit: int = 10) -> list[dict]:
-
+    async def get_recommendations(self, user_id: UUID, limit: int = 10) -> UserRecommendationResponseDTO:
         similarities = (await self.session.execute(
             select(UserSimilarity).where(UserSimilarity.user1_id == user_id)
         )).scalars().all()
 
         similar_users = sorted(similarities, key=lambda x: x.similarity, reverse=True)[:5]
 
-        recommended_movies = []
+        recommended_movie_ids = set()
+
         for sim in similar_users:
             ratings = (await self.session.execute(
                 select(Ratings).where(Ratings.user_id == sim.user2_id, Ratings.rating >= 7)
             )).scalars().all()
+
             for rating in ratings:
-                movie = (await self.session.execute(
-                    select(Movies).where(Movies.id == rating.movie_id)
-                )).scalars().first()
-                if movie:
-                    recommended_movies.append({
-                        "movie_id": movie.id,
-                        "ratings": movie.ratings,
-                        "similarity": sim.similarity
-                    })
+                recommended_movie_ids.add(rating.movie_id)
 
-        recommended_movies = sorted(
-            recommended_movies,
-            key=lambda x: (x["similarity"], x["ratings"] or 0),
-            reverse=True
-        )[:limit]
+        recommendations = [MovieRecommendationDTO(movie_id=mid) for mid in recommended_movie_ids]
 
-        return recommended_movies
+        return UserRecommendationResponseDTO(
+            user_id=user_id,
+            recommendations=recommendations[:limit]
+        )
 
-    async def get_general_recommendations(self, limit: int = 10) -> List[dict]:
-        """Получить общие рекомендации на основе сходства фильмов."""
-
+    async def get_general_recommendations(self, limit: int = 10) -> GeneralRecommendationResponseDTO:
         popular_movies = (await self.session.execute(
             select(Movies).where(Movies.imdb_rating >= 7.0).order_by(Movies.ratings.desc()).limit(10)
         )).scalars().all()
 
-        recommended_movies = []
+        recommended_movie_ids = set()
 
         for movie in popular_movies:
             similarities = (await self.session.execute(
@@ -74,20 +81,8 @@ class RecomendationService:
             similar_movies = sorted(similarities, key=lambda x: x.similarity, reverse=True)[:5]
 
             for sim in similar_movies:
-                similar_movie = (await self.session.execute(
-                    select(Movies).where(Movies.id == sim.movie2_id)
-                )).scalars().first()
-                if similar_movie:
-                    recommended_movies.append({
-                        "movie_id": similar_movie.id,
-                        "ratings": similar_movie.ratings,
-                        "similarity": sim.similarity
-                    })
+                recommended_movie_ids.add(sim.movie2_id)
 
-        recommended_movies = sorted(
-            recommended_movies,
-            key=lambda x: (x["similarity"], x["ratings"] or 0),
-            reverse=True
-        )[:limit]
+        recommendations = [MovieRecommendationDTO(movie_id=mid) for mid in recommended_movie_ids]
 
-        return recommended_movies
+        return GeneralRecommendationResponseDTO(recommendations=recommendations[:limit])

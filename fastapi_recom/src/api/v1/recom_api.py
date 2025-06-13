@@ -1,22 +1,33 @@
 from fastapi_cache.decorator import cache
 
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, UUID4
 from src.services.recomendation import get_recommendation, RecomendationService
-
+from src.schemas.recomendation import GeneralRecommendationResponseDTO, UserRecommendationResponseDTO
 router = APIRouter()
 
 
 @router.get(
-    "/",
-    summary="Get recom",
-    description="Get recomendations for users.",
+    "/user/{user_id}",
+    summary="Get user recommendations",
+    description="Get personalized recommendations based on user preferences.",
+    response_model=UserRecommendationResponseDTO
 )
 @cache(expire=30)
-async def get_recom(
-    reccomandation_service: RecomendationService = Depends(get_recommendation),
+async def get_user_recom(
+    user_id: UUID4,
+    recommendation_service: RecomendationService = Depends(get_recommendation),
 ):
-    try:
-        reccomandation = await reccomandation_service.get_recommendations(user_id=...)
-        pass
-    except Exception as e:
-        raise e
+    return await recommendation_service.get_recommendations(user_id=user_id)
+
+
+@router.get(
+    "/general",
+    summary="Get general recommendations",
+    description="Get top recommendations based on popular and similar movies.",
+    response_model=GeneralRecommendationResponseDTO
+)
+@cache(expire=60)
+async def get_general_recom(
+    recommendation_service: RecomendationService = Depends(get_recommendation),
+):
+    return await recommendation_service.get_general_recommendations()

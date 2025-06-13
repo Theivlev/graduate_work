@@ -2,8 +2,8 @@ from collections import defaultdict
 from uuid import UUID
 from dataclasses import dataclass
 
-from sqlalchemy import select
-
+from sqlalchemy import select, func
+from sqlalchemy.orm import selectinload
 from src.models.actions import Actions
 from src.models.film import Movies
 from src.models.rating import Ratings
@@ -14,17 +14,31 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from src.schemas.vectror import MovieVectorCreate, UserVectorCreate
 
 
+import logging
+logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
+logger = logging.getLogger(__name__)
+
+
 @dataclass
 class VectorService:
     user_vector_crud = CRUDBase(UserVector)
     movie_vector_crud = CRUDBase(MovieVector)
 
     async def compute_user_vector(self, user_id: UUID, session: AsyncSession) -> dict:
-        ratings_query = select(Ratings).where(Ratings.user_id == user_id)
-        ratings = (await session.execute(ratings_query)).scalars().all()
+        """
+        Вычисляет вектор пользователя на основе его оценок и действий.
+        """
+
+        ratings_query = (
+            select(Ratings)
+            .where(Ratings.user_id == user_id)
+            .options(selectinload(Ratings.user))
+        )
+        result = await session.execute(ratings_query)
+        ratings = result.scalars().all()
 
         actions_count = await session.scalar(
-            select(Actions.id).where(Actions.user_id == user_id)
+            select(func.count(Actions.id)).where(Actions.user_id == user_id)
         )
 
         total_ratings = len(ratings)
@@ -36,26 +50,39 @@ class VectorService:
             "total_actions": actions_count or 0
         }
 
+        logger.info(f'Получаем vector {vector}')
         user_vector_dto = UserVectorCreate(user_id=user_id, vector_data=vector)
+        logger.info(f'Создаем объект user_vector_dto: {user_vector_dto}')
         await self.user_vector_crud.create(obj_in=user_vector_dto, session=session)
         await session.commit()
 
         return vector
 
     async def compute_movie_vector(self, movie_id: UUID, session: AsyncSession) -> dict:
-        movie_query = select(Movies).where(Movies.id == movie_id)
-        movie = (await session.execute(movie_query)).scalars().first()
+        """
+        Вычисляет вектор фильма на основе оценок пользователей.
+        """
+
+        movie_query = (
+            select(Movies)
+            .where(Movies.id == movie_id)
+            .options(selectinload(Movies.ratings))
+        )
+        result = await session.execute(movie_query)
+        movie = result.scalars().first()
 
         if not movie:
             return {}
 
+
         ratings = [rating.rating for rating in movie.ratings]
 
-        avg_rating = sum(ratings) / len(ratings) if ratings else 0.0
+        total_ratings = len(ratings)
+        avg_rating = sum(ratings) / total_ratings if total_ratings else 0.0
 
         vector = {
             "avg_user_rating": avg_rating,
-            "total_ratings": len(ratings),
+            "total_ratings": total_ratings,
         }
 
         movie_vector_dto = MovieVectorCreate(movie_id=movie_id, vector_data=vector)

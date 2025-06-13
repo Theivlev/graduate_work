@@ -43,16 +43,17 @@ async def actions_user(
         async with db_session() as session:
 
             await actions_service.save_action(action_dto=message, session=session)
-
+        async with db_session() as session:
             await vector_service.compute_user_vector(
                 user_id=message.user_id,
                 session=session
             )
+        async with db_session() as session:
             await vector_service.compute_movie_vector(
                 movie_id=message.movie_id,
                 session=session
             )
-
+        async with db_session() as session:
             users = (await session.execute(select(Users))).scalars().all()
             for other_user in users:
                 if other_user.id != message.user_id:
@@ -61,7 +62,7 @@ async def actions_user(
                         user2_id=other_user.id,
                         session=session
                     )
-
+        async with db_session() as session:
             movies = (await session.execute(select(Movies))).scalars().all()
             for other_movie in movies:
                 if other_movie.id != message.movie_id:
