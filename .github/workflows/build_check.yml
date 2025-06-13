@@ -1,0 +1,22 @@
+name: Docker Compose
+
+on:
+  workflow_call:
+
+jobs:
+  docker-compose:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Copy .env.example to .env
+        run: cp .env.example .env
+
+      - name: Copy tests/.env.example to tests/.env
+        run: cp tests/.env.example tests/.env
+
+      - name: Run docker compose
+        uses: hoverkraft-tech/compose-action@v2.0.1
+        with:
+          compose-file: "./docker-compose-test.yml"

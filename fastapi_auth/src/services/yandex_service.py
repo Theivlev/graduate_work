@@ -1,6 +1,5 @@
 import uuid
 from dataclasses import dataclass
-from typing import Any, Dict, Tuple
 
 import aiohttp
 from fastapi.responses import RedirectResponse
@@ -24,9 +23,7 @@ class YandexService:
 
     user_manager: UserManager
 
-    async def get_yandex_code(
-        self, url: str, device_id: str | None = None, device_name: str = "Yandex Device"
-    ) -> RedirectResponse:
+    async def get_yandex_code(self, url, device_id: str = None, device_name: str = "Yandex Device") -> str:
         """Получение данных для ссылки редиректа в Яндекс"""
         if device_name:
             url += f"&device_name={device_name}"
@@ -37,37 +34,32 @@ class YandexService:
         await redis_client.set(f"yandex_device:{device_name}", device_id)
         return RedirectResponse(url, status_code=307)
 
-    async def get_yandex_token(
-        self, code: str, device_id: str | None = None, device_name: str = "Yandex Device"
-    ) -> Tuple[str, str]:
+    async def get_yandex_token(self, code: str, device_id: str = None, device_name: str = "Yandex Device") -> str:
         """Получение на сайте Яндекса access_token"""
         if not device_id:
             redis_client = await RedisClientFactory.create(redis_settings.dsn)
-            device_id_bytes = await redis_client.get(f"yandex_device:{device_name}")
-            device_id = device_id_bytes.decode("ascii") if device_id_bytes else str(uuid.uuid4())
-
+            device_id = await redis_client.get(f"yandex_device:{device_name}")
         data = {
             "grant_type": "authorization_code",
             "code": code,
             "client_id": yandex_settings.client_id,
             "client_secret": yandex_settings.client_secret,
-            "device_id": device_id,
+            "device_id": device_id.decode("ascii"),
             "device_name": device_name,
         }
         async with aiohttp.ClientSession() as session:
             async with session.post(yandex_settings.token_url, data=data) as response:
                 token_response = await response.json()
-                access_token = str(token_response.get("access_token", ""))
-                return access_token, device_id
+                return token_response.get("access_token"), device_id
 
-    async def get_yandex_user_info(self, access_token: str) -> Dict[str, Any]:
+    async def get_yandex_user_info(self, access_token: str) -> dict:
         """Получение данных на сайте Яндекса пользователя"""
         user_info_headers = {"Authorization": f"OAuth {access_token}"}
         async with aiohttp.ClientSession() as session:
             async with session.get(yandex_settings.user_info_url, headers=user_info_headers) as response:
                 return await response.json()
 
-    async def revoke_yandex_token(self, access_token: str) -> Dict[str, Any]:
+    async def revoke_yandex_token(self, access_token: str) -> dict:
         """Получение статуса разлогинивания на сайте Яндекса пользователя"""
         data = {
             "access_token": access_token,
@@ -78,7 +70,7 @@ class YandexService:
             async with session.post(yandex_settings.revoke_token_url, data=data) as response:
                 return await response.json()
 
-    async def logined_yandex_user(self, user: Any, device_id: str, device_name: str) -> Dict[str, str]:
+    async def logined_yandex_user(self, user, device_id: str, device_name: str) -> dict:
         """Генерация токенов для пользователя"""
         access_token = await auth_backend.get_strategy().write_token(user)
         refresh_token = await refresh_auth_backend.get_strategy().write_token(user)
@@ -88,9 +80,7 @@ class YandexService:
         await redis_client.set(f"yandex_device:{device_name}", device_id)
         return {"access_token": access_token, "refresh_token": refresh_token}
 
-    async def login_yandex_user(
-        self, code: str, device_id: str | None = None, device_name: str = "Yandex Device"
-    ) -> Dict[str, Any]:
+    async def login_yandex_user(self, code: str, device_id: str = None, device_name: str = "Yandex Device") -> dict:
         """Авторизация пользователя по данным Яндекса."""
         access_token, device_id = await self.get_yandex_token(code, device_id, device_name)
         user_info = await self.get_yandex_user_info(access_token)
@@ -111,9 +101,13 @@ class YandexService:
         return {"message": "Успешная авторизация через Яндекс", "email": email, **tokens}
 
     async def logout_yandex_user(
-        self, code: str, user: Any, device_id: str | None = None, device_name: str = "Yandex Device"
-    ) -> Dict[str, Any]:
+        self, code: str, user, device_id: str = None, device_name: str = "Yandex Device"
+    ) -> dict:
         """Разлогинивание пользователя по данным Яндекса."""
         access_token, device_id = await self.get_yandex_token(code, device_id, device_name)
         logout_response = await self.revoke_yandex_token(access_token)
+        # redis_client = await RedisClientFactory.create(redis_settings.dsn)
+        # await redis_client.delete(f"access_token:{user.id}")
+        # await redis_client.delete(f"refresh_token:{user.id}")
+        # await redis_client.delete(f"yandex_device:{device_name}", device_id)
         return {"status": "Tokens revoked", **logout_response}

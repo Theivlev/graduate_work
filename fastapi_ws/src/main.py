@@ -1,46 +1,24 @@
-import logging
 from contextlib import asynccontextmanager
 
-import aio_pika
 from fastapi.responses import ORJSONResponse
 from fastapi.staticfiles import StaticFiles
 from src.api.routers import main_router
-from src.core.config import project_settings, rabbit_settings, redis_settings, ws_settings
+from src.core.config import project_settings, redis_settings
 from src.db.postgres import create_database
 from src.db.redis_cache import RedisCacheManager, RedisClientFactory
-from src.services.consumers import on_ws_message
-from src.services.superuser_service import create_superuser
 
 from fastapi import FastAPI, Request, status
-
-logger = logging.getLogger(__name__)
 
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     redis_cache_manager = RedisCacheManager(redis_settings)
     redis_client = await RedisClientFactory.create(redis_settings.dsn)
-    await create_database(redis_client)
-    await redis_cache_manager.setup()
-    superuser = await create_superuser()
-    if superuser and superuser.api_key:
-        logger.info(f"Шифрованный клю для авторизации суперпользователем: {superuser.api_key}")
-    connection = await aio_pika.connect_robust(
-        login=rabbit_settings.user,
-        password=rabbit_settings.password,
-        host=rabbit_settings.host,
-        port=rabbit_settings.port,
-        virtualhost="/",
-    )
-    channel = await connection.channel()
-    ws_queue = await channel.get_queue(ws_settings.ws_queue)
-    await ws_queue.consume(lambda msg: on_ws_message(msg, channel))
-    logger.info("Начало работы сервиса Вебсокет")
-
     try:
+        await create_database(redis_client)
+        await redis_cache_manager.setup()
         yield
     finally:
-        await connection.close()
         await redis_cache_manager.tear_down()
 
 

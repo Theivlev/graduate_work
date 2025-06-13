@@ -4,7 +4,8 @@ import logging
 import aio_pika
 import backoff
 from aio_pika.exceptions import AMQPConnectionError, ChannelClosed, ConnectionClosed
-from core.config import mail_queue_settings, rabbit_settings
+from core.config import rabbit_settings
+from core.rabbit import setup_rabbit
 from services.consumers import on_failed_message, on_message
 
 logger = logging.getLogger(__name__)
@@ -22,13 +23,12 @@ async def main():
     async with connection:
         channel = await connection.channel()
 
-        mail_queue = await channel.get_queue(mail_queue_settings.mail_queue)
-        failed_queue = await channel.get_queue(mail_queue_settings.failed_queue)
+        channel, mail_queue, failed_queue = await setup_rabbit(connection)
 
         await mail_queue.consume(lambda msg: on_message(msg, channel))
         await failed_queue.consume(on_failed_message)
-
         logger.info("Ожидаем сообщений...")
+
         try:
             await asyncio.Future()
         finally:

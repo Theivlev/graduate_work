@@ -2,14 +2,13 @@ import logging
 import time
 from functools import wraps
 
-from aio_pika.exceptions import AMQPConnectionError
 from redis.exceptions import ConnectionError as RedisError
 
 logger = logging.getLogger(__name__)
 
 
 def backoff(
-    error_connection: type[RedisError | AMQPConnectionError],
+    error_connection: type[RedisError],
     start_sleep_time: float = 0.1,
     factor: int = 2,
     border_sleep_time: int = 10,
