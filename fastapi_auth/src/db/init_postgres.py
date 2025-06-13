@@ -3,10 +3,12 @@ import logging
 
 from fastapi_users.exceptions import UserAlreadyExists, UserNotExists
 from pydantic import EmailStr
+
 from src.core.config import auth_settings
 from src.core.user_core import get_user_db, get_user_manager
 from src.db.postgres import get_async_session
 from src.schemas.user_schema import UserCreate
+from src.core.user_core import get_user_manager
 
 logger = logging.getLogger(__name__)
 
@@ -25,15 +27,14 @@ async def create_user(email: EmailStr, password: str, is_superuser: bool = False
     except UserAlreadyExists:
         pass
 
-
 async def create_first_superuser():
     async with get_async_session_context() as session:
         async with get_user_db_context(session) as user_db:
             async with get_user_manager_context(user_db) as user_manager:
                 try:
-                    await user_manager.get_by_email(auth_settings.first_superuser_email)
+                    user = await user_manager.get_by_email(auth_settings.first_superuser_email)
                 except UserNotExists:
-                    await user_manager.create(
+                    user = await user_manager.create(
                         UserCreate(
                             email=auth_settings.first_superuser_email,
                             password=auth_settings.first_superuser_password,

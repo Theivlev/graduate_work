@@ -6,17 +6,17 @@ Create Date: 2025-05-10 07:01:03.057228
 
 """
 from alembic import op
+import sqlalchemy as sa
+from sqlalchemy.sql import text
 from sqlalchemy.exc import SQLAlchemyError
 
-# import sqlalchemy as sa
-from sqlalchemy.sql import text
+
 
 # revision identifiers, used by Alembic.
 revision = "5ba11b35ff1a"
 down_revision = "cf9ba141e72d"
 branch_labels = None
 depends_on = None
-
 
 def create_partition(target, connection, device_types: list = None, **kw) -> None:
     """Создание партиций по типу устройства"""
@@ -33,7 +33,7 @@ def create_partition(target, connection, device_types: list = None, **kw) -> Non
                 """
             )
             connection.execute(sql)
-    except SQLAlchemyError as e:
+    except SQLAlchemyError as e: 
         raise SQLAlchemyError("Ошибка create_partition для auth_history") from e
 
 
@@ -43,7 +43,7 @@ def upgrade():
 
 
 def downgrade():
-    # сonnection = op.get_bind()
+    onnection = op.get_bind()
     device_types = ["smart", "mobile", "web"]
     for device_type in device_types:
         partition_table_name = f"auth.auth_history_{device_type}"

@@ -91,7 +91,7 @@ services:
       - jaeger
       - kafka-0
     volumes:
-      - ./fastapi_auth:/opt/app
+      - ./fastapi_auth:/opt/app 
       - /tmp/logs/fastapi_auth/:/var/log/fastapi_auth/
 
   fastapi_auth2:
@@ -108,8 +108,8 @@ services:
       - theatre-db
       - jaeger
       - kafka-0
-    volumes:
-      - ./fastapi_auth:/opt/app
+    volumes:  
+      - ./fastapi_auth:/opt/app 
       - /tmp/logs/fastapi_auth/:/var/log/fastapi_auth/
 
 

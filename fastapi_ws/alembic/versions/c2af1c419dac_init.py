@@ -1,16 +1,16 @@
-"""Init
+"""init
 
-Revision ID: abb291f21c03
+Revision ID: c2af1c419dac
 Revises:
-Create Date: 2025-06-01 21:44:55.669483
+Create Date: 2025-04-30 17:00:52.171867
 
 """
+
 import sqlalchemy as sa
 from alembic import op
-from sqlalchemy.dialects import postgresql
 
 # revision identifiers, used by Alembic.
-revision = "abb291f21c03"
+revision = "c2af1c419dac"
 down_revision = None
 branch_labels = None
 depends_on = None
@@ -21,7 +21,7 @@ def upgrade():
     op.create_table(
         "room",
         sa.Column("name", sa.String(), nullable=False),
-        sa.Column("message_history", postgresql.JSONB(astext_type=sa.Text()), nullable=False),
+        sa.Column("message_history", sa.JSON(), nullable=False),
         sa.Column("id", sa.UUID(), nullable=False),
         sa.PrimaryKeyConstraint("id"),
     )
@@ -29,17 +29,13 @@ def upgrade():
         "user",
         sa.Column("name", sa.String(length=50), nullable=False),
         sa.Column("role", sa.String(length=20), nullable=False),
-        sa.Column("room_id", sa.UUID(), nullable=True),
-        sa.Column("email", sa.String(), nullable=True),
-        sa.Column("is_superuser", sa.Boolean(), nullable=False),
-        sa.Column("api_key", sa.String(length=64), nullable=True),
+        sa.Column("room_id", sa.UUID(), nullable=False),
         sa.Column("id", sa.UUID(), nullable=False),
         sa.ForeignKeyConstraint(
             ["room_id"],
             ["room.id"],
         ),
         sa.PrimaryKeyConstraint("id"),
-        sa.UniqueConstraint("api_key"),
     )
     op.create_table(
         "message",

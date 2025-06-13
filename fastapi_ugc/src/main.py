@@ -4,8 +4,7 @@ from fastapi.responses import ORJSONResponse
 from motor.motor_asyncio import AsyncIOMotorClient
 from src.api.routers import main_router
 from src.core.config import mongo_settings, project_settings
-
-# from src.core.logger import request_id_var
+from src.core.logger import request_id_var
 from src.db.mongo import init_db
 
 from fastapi import FastAPI, Request, status  # noqa
