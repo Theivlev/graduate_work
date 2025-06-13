@@ -1,12 +1,12 @@
-import aiosmtplib
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
 
+import aiosmtplib
 from core.config import smtp_settings
 from services.template import get_template
 
 
-async def send_email_smtp(email, subject, template, data):
+async def send_email_smtp(email: str, subject: str, template: str, data: dict):
     body = get_template(template, data)
 
     msg = MIMEMultipart()

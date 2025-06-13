@@ -1,10 +1,10 @@
 from functools import lru_cache
 
 import grpc
-from core.config import grpc_settings
 from google.protobuf.json_format import MessageToDict
-from schemas.user import GetUserInfoResponse
-from services.grpc import auth_pb2, auth_pb2_grpc
+from src.core.config import grpc_settings
+from src.schemas.user_schema import GetUserInfoResponse
+from src.services.grpc import auth_pb2, auth_pb2_grpc
 
 
 class GRPCAuthClient:

@@ -38,17 +38,17 @@ class SMTPSettings(BaseSettings):
 class MailQueueSettings(BaseSettings):
     """Настройки имён exchange, очередей и routing key для email-рассылки."""
 
-    mail_exchange: str = "mail_exchange"
-    retry_exchange: str = "retry_exchange"
-    failed_exchange: str = "failed_exchange"
+    mail_exchange: str
+    retry_exchange: str
+    failed_exchange: str
 
-    mail_queue: str = "mail_queue"
-    retry_queue: str = "mail_retry_queue"
-    failed_queue: str = "failed_queue"
+    mail_queue: str
+    retry_queue: str
+    failed_queue: str
 
-    mail_routing_key: str = "mail"
-    retry_routing_key: str = "retry"
-    failed_routing_key: str = "failed"
+    mail_routing_key: str
+    retry_routing_key: str
+    failed_routing_key: str
 
     model_config = SettingsConfigDict(env_file=".env", extra="ignore", env_prefix="MAIL_")
 
@@ -67,6 +67,6 @@ LOGGER_SETTINGS = {
         logging.StreamHandler(),
     ],
 }
-logging.basicConfig(**LOGGER_SETTINGS)
+logging.basicConfig(**LOGGER_SETTINGS)  # type: ignore
 
 TEMPLATES_DIR = "/app/templates"
