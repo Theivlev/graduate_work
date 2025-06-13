@@ -67,6 +67,6 @@ LOGGER_SETTINGS = {
         logging.StreamHandler(),
     ],
 }
-logging.basicConfig(**LOGGER_SETTINGS)
+logging.basicConfig(**LOGGER_SETTINGS)  # type: ignore
 
 TEMPLATES_DIR = "/app/templates"

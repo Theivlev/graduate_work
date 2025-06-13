@@ -14,7 +14,7 @@ class User(Base):
     role: Mapped[str] = mapped_column(String(20), default="user")
     room_id: Mapped[Optional[uuid.UUID]] = mapped_column(UUID(as_uuid=True), ForeignKey("room.id"), nullable=True)
     email: Mapped[Optional[str]] = mapped_column(String(), nullable=True)
-    room: Mapped["Room"] = relationship("Room", back_populates="users")
+    room: Mapped["Room"] = relationship("Room", back_populates="users")  # type: ignore # noqa
     is_superuser: Mapped[bool] = mapped_column(default=False)
     api_key: Mapped[Optional[str]] = mapped_column(String(64), unique=True, nullable=True)
-    room: Mapped[Optional["Room"]] = relationship("Room", back_populates="users")
+    room: Mapped[Optional["Room"]] = relationship("Room", back_populates="users")  # type: ignore # noqa
