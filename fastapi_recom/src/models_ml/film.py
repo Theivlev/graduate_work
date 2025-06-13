@@ -1,6 +1,6 @@
 from uuid import UUID
 
-from sqlalchemy import ForeignKey, JSON
+from sqlalchemy import JSON, ForeignKey
 from sqlalchemy.orm import Mapped, mapped_column
 from src.db.postgres import Base
 
@@ -15,5 +15,6 @@ class MovieSimilarity(Base):
 
 class MovieVector(Base):
     """Вектор характеристик фильма"""
+
     movie_id: Mapped[UUID] = mapped_column(ForeignKey("movies.id"), primary_key=True)
     vector_data: Mapped[dict] = mapped_column(JSON)

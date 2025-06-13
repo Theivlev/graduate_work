@@ -1,8 +1,8 @@
-from sqlalchemy import JSON
-from sqlalchemy.orm import Mapped, mapped_column
-from sqlalchemy import ForeignKey
-from src.db.postgres import Base
 from uuid import UUID
+
+from sqlalchemy import JSON, ForeignKey
+from sqlalchemy.orm import Mapped, mapped_column
+from src.db.postgres import Base
 
 
 class UserSimilarity(Base):
@@ -13,5 +13,6 @@ class UserSimilarity(Base):
 
 class UserVector(Base):
     """Вектор предпочтений пользователя"""
+
     user_id: Mapped[UUID] = mapped_column(ForeignKey("users.id"), primary_key=True)
     vector_data: Mapped[dict] = mapped_column(JSON)

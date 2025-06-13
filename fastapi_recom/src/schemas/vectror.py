@@ -1,5 +1,5 @@
-from uuid import UUID
 from typing import Dict
+from uuid import UUID
 
 from .dto import AbstractDTO
 

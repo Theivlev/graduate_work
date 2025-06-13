@@ -1,23 +1,21 @@
+import logging
 from dataclasses import dataclass
 from datetime import datetime
 from uuid import UUID
 
+from sqlalchemy import func, select, update
 from sqlalchemy.ext.asyncio import AsyncSession
-
 from src.crud.base import CRUDBase
 from src.models.actions import Actions
-from src.schemas.actions_user import ActionsUserDTO
-from src.models.rating import Ratings
-from sqlalchemy import select, update, func
 from src.models.film import Movies
+from src.models.rating import Ratings
 from src.models.user import Users
+from src.schemas.actions_user import ActionsUserDTO
 from src.schemas.movies import MovieSchema
 from src.schemas.rating import RatingSchema
 from src.schemas.user import UserSchema
 
-
-import logging
-logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
+logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s")
 logger = logging.getLogger(__name__)
 
 
@@ -52,18 +50,21 @@ class ActionsService:
 
             await self.actions.create(obj_in=action_dto, session=session)
 
-            if action_dto.action.get('type') == "rate":
+            if action_dto.action.get("type") == "rate":
                 try:
                     rating_value = int(action_dto.event_data)
                     if not 1 <= rating_value <= 10:
                         raise ValueError("Рейтинг должен быть от 1 до 10")
 
-                    existing_rating = (await session.execute(
-                        select(Ratings).where(
-                            Ratings.user_id == user_id,
-                            Ratings.movie_id == movie_id
+                    existing_rating = (
+                        (
+                            await session.execute(
+                                select(Ratings).where(Ratings.user_id == user_id, Ratings.movie_id == movie_id)
+                            )
                         )
-                    )).scalars().first()
+                        .scalars()
+                        .first()
+                    )
 
                     if existing_rating:
                         await session.execute(
@@ -73,10 +74,7 @@ class ActionsService:
                         )
                     else:
                         rating_create = RatingSchema(
-                            user_id=user_id,
-                            movie_id=movie_id,
-                            rating=rating_value,
-                            timestamp=event_time
+                            user_id=user_id, movie_id=movie_id, rating=rating_value, timestamp=event_time
                         )
                         await self.ratings.create(obj_in=rating_create, session=session)
 

@@ -13,12 +13,12 @@ class ServiceError(HTTPException):
 
 
 class UnavailableServiceError(ServiceError):
-    def __init__(self, detail: str = 'service is unavailable, retry later', **kwargs):
+    def __init__(self, detail: str = "service is unavailable, retry later", **kwargs):
         super().__init__(status_code=HTTPStatus.SERVICE_UNAVAILABLE, detail=detail, **kwargs)
 
 
 class NotFoundServiceError(ServiceError):
-    def __init__(self, detail: str = 'not found', **kwargs):
+    def __init__(self, detail: str = "not found", **kwargs):
         super().__init__(status_code=HTTPStatus.NOT_FOUND, detail=detail, **kwargs)
 
 
@@ -30,10 +30,11 @@ def backoff(
     border_sleep_time: int = 10,
 ):
     """
-        Функция для повторного выполнения асинхронной функции.
-        В случае возникновения ошибки.
-        Использует экспоненциальный рост времени ожидания.
-        """
+    Функция для повторного выполнения асинхронной функции.
+    В случае возникновения ошибки.
+    Использует экспоненциальный рост времени ожидания.
+    """
+
     def func_wrapper(func: callable):
         @wraps(func)
         async def inner(*args, **kwargs):

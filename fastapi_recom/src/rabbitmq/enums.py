@@ -2,11 +2,11 @@ from enum import StrEnum
 
 
 class RoutingKeys(StrEnum):
-    ACTIONS = 'actions'
+    ACTIONS = "actions"
     RECOMMENDATIONS = "recommendations"
 
 
 class ExchangeType(StrEnum):
-    DIRECT = 'direct'
-    FANOUT = 'fanout'
-    TOPIC = 'topic'
+    DIRECT = "direct"
+    FANOUT = "fanout"
+    TOPIC = "topic"

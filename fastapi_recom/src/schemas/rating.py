@@ -1,6 +1,6 @@
-from uuid import UUID, uuid4
 from datetime import datetime
-from uuid import UUID
+from uuid import UUID, uuid4
+
 from pydantic import Field
 
 from .dto import AbstractDTO

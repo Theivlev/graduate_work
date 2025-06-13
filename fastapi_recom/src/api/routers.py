@@ -1,4 +1,5 @@
 from src.api.v1 import recom_router
+
 from fastapi import APIRouter
 
 API_V1: str = "/recom/v1"

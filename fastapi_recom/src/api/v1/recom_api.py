@@ -1,13 +1,14 @@
-from fastapi_cache.decorator import cache
-
-from fastapi import APIRouter, Depends
-from src.services.recomendation import get_recommendation, RecomendationService
-from src.schemas.recomendation import GeneralRecommendationResponseDTO, UserRecommendationResponseDTO
 from uuid import UUID
-from src.rabbitmq.queues import QUEUES
+
+from fastapi_cache.decorator import cache
+from src.rabbitmq.enums import RoutingKeys
 from src.rabbitmq.exchanges import EXCHANGES
 from src.rabbitmq.producer import publish
-from src.rabbitmq.enums import RoutingKeys
+from src.rabbitmq.queues import QUEUES
+from src.schemas.recomendation import GeneralRecommendationResponseDTO, UserRecommendationResponseDTO
+from src.services.recomendation import RecomendationService, get_recommendation
+
+from fastapi import APIRouter, Depends
 
 router = APIRouter()
 
@@ -16,7 +17,7 @@ router = APIRouter()
     "/user/{user_id}",
     summary="Получить рекомендации для пользователя",
     description="Получить персонализированные рекомендации на основе предпочтений пользователя.",
-    response_model=UserRecommendationResponseDTO
+    response_model=UserRecommendationResponseDTO,
 )
 @cache(expire=30)
 async def get_user_recom(
@@ -36,7 +37,7 @@ async def get_user_recom(
     "/general",
     summary="Получить общие рекомендации",
     description="Получить топовые рекомендации на основе популярных и похожих фильмов.",
-    response_model=GeneralRecommendationResponseDTO
+    response_model=GeneralRecommendationResponseDTO,
 )
 @cache(expire=60)
 async def get_general_recom(

@@ -1,6 +1,5 @@
 from uuid import UUID
 
-
 from .dto import AbstractDTO
 
 
