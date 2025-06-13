@@ -24,7 +24,7 @@ async def lifespan(app: FastAPI):
     await redis_cache_manager.setup()
     superuser = await create_superuser()
     if superuser and superuser.api_key:
-        logger.info(f"Шифрованный клю для авторизации суперпользователем: {superuser.api_key}")
+        logger.info(f"Шифрованный ключ для авторизации суперпользователем: {superuser.api_key}")
     connection = await aio_pika.connect_robust(
         login=rabbit_settings.user,
         password=rabbit_settings.password,
