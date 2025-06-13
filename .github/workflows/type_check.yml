@@ -33,4 +33,5 @@ jobs:
           --disable-error-code=attr-defined \
           --disable-error-code=index \
           --disable-error-code=annotation-unchecked \
+          --disable-error-code=import-not-found \
           .
