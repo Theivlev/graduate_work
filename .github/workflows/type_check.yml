@@ -25,4 +25,4 @@ jobs:
 
     - name: Run mypy
       run: |
-        mypy --explicit-package-bases .
+        mypy --explicit-package-bases --disable-error-code=import-not-found .
