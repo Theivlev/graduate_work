@@ -6,7 +6,7 @@ from uuid import UUID
 from broker.kafka import kafka_producer
 from src.core.config import kafka_settings
 from src.crud.base import ModelType, BaseMongoCRUD
-from src.shemas.broker import BrokerSendMessage
+from src.shemas.broker import KafkaSendMessage
 
 logger = logging.getLogger(__name__)
 
@@ -55,7 +55,7 @@ class BaseService(Generic[ModelType]):
                 await kafka_producer.send_and_wait(
                     topic=kafka_settings.topic,
                     value=str.encode(
-                        BrokerSendMessage(
+                        KafkaSendMessage(
                             user_id=user_id if isinstance(user_id, UUID) else UUID(user_id),
                             movie_id=movie_id if isinstance(movie_id, UUID) else UUID(movie_id),
                             action=f"{action} {self.crud.model.get_name()}",

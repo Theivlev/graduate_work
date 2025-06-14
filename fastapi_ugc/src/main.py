@@ -3,6 +3,8 @@ from contextlib import asynccontextmanager
 from broker.kafka import kafka_producer
 from fastapi.responses import ORJSONResponse
 from motor.motor_asyncio import AsyncIOMotorClient
+
+from broker.rabbit import setup_rabbitmq, close_rabbitmq
 from src.api.routers import main_router
 from src.core.config import mongo_settings, project_settings
 
@@ -16,13 +18,14 @@ from fastapi import FastAPI, Request, status  # noqa
 async def lifespan(app: FastAPI):
     app.state.client = AsyncIOMotorClient(str(mongo_settings.ugc_dsn))
     app.state.db = app.state.client[mongo_settings.ugc_db]
-
+    await setup_rabbitmq(app)
     await init_db(app.state.db)
     await kafka_producer.start()
     try:
         yield
     finally:
         app.state.client.close()
+        await close_rabbitmq(app)
         await kafka_producer.stop()
 
 
