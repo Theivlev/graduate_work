@@ -7,9 +7,6 @@ from src.shemas.notifications_history import NotificationRecordResponse
 
 from fastapi import APIRouter, Depends, HTTPException, Response, status
 
-# from uuid import UUID
-
-
 router = APIRouter()
 
 
