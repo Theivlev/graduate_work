@@ -208,7 +208,7 @@ class ChatService:
                 flag_modified(room, "message_history")
                 self.db.add(room)
                 await self.db.flush()
-                user = User(name=fullname, role="user", room_id=room.id, email=email)  # Use the room's generated ID
+                user = User(name=fullname, role="user", room_id=room.id, email=email)
                 self.db.add(user)
                 await self.db.commit()
             redirect_url = f"/ws/v1/chat/{room.id}/{user.id}?username={user.name}&email={user.email}&role={user.role}"
@@ -216,6 +216,30 @@ class ChatService:
         except Exception as e:
             await self.db.rollback()
             return JSONResponse({"success": False, "error": str(e)}, status_code=500)
+
+    async def _add_mailing_message(self, message: str):
+        """Рассылка рекомендательных сообщений во все комнаты."""
+        try:
+            result = await self.db.execute(select(Room))
+            rooms = result.scalars().all()
+            for room in rooms:
+                if room.message_history is None:
+                    room.message_history = []
+                room.message_history.append(
+                    {
+                        "text": message,
+                        "username": "Бот рекомендаций",
+                        "timestamp": time.time(),
+                        "role": "user",
+                        "type": "message",
+                    }
+                )
+                flag_modified(room, "message_history")
+
+            await self.db.commit()
+        except Exception as e:
+            await self.db.rollback()
+            raise e
 
 
 async def get_chat_service(db: AsyncSession = Depends(get_async_session)) -> ChatService:

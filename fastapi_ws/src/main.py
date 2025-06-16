@@ -2,18 +2,22 @@ import logging
 from contextlib import asynccontextmanager
 
 import aio_pika
+import sentry_sdk
 from fastapi.responses import ORJSONResponse
 from fastapi.staticfiles import StaticFiles
 from src.api.routers import main_router
-from src.core.config import project_settings, rabbit_settings, redis_settings, ws_settings
+from src.core.config import project_settings, rabbit_settings, redis_settings, sentry_settings, ws_settings
+from src.core.logger import request_id_var
 from src.db.postgres import create_database
 from src.db.redis_cache import RedisCacheManager, RedisClientFactory
-from src.services.consumers import on_ws_message
+from src.services.consumers import on_recom_message, on_ws_message
 from src.services.superuser_service import create_superuser
 
 from fastapi import FastAPI, Request, status
 
 logger = logging.getLogger(__name__)
+
+sentry_sdk.init(dsn=sentry_settings.dsn, traces_sample_rate=1.0)
 
 
 @asynccontextmanager
@@ -34,7 +38,9 @@ async def lifespan(app: FastAPI):
     )
     channel = await connection.channel()
     ws_queue = await channel.get_queue(ws_settings.ws_queue)
+    recom_queue = await channel.get_queue(ws_settings.recom_queue)
     await ws_queue.consume(lambda msg: on_ws_message(msg, channel))
+    await recom_queue.consume(lambda msg: on_recom_message(msg, channel))
     logger.info("Начало работы сервиса Вебсокет")
 
     try:
@@ -62,8 +68,13 @@ app.include_router(main_router)
 
 @app.middleware("http")
 async def before_request(request: Request, call_next):
-    response = await call_next(request)
     request_id = request.headers.get("X-Request-Id")
     if not request_id:
         return ORJSONResponse(status_code=status.HTTP_400_BAD_REQUEST, content={"detail": "X-Request-Id is required"})
-    return response
+    request_id_var.set(request_id)
+    try:
+        response = await call_next(request)
+        response.headers["X-Request-Id"] = request_id
+        return response
+    finally:
+        request_id_var.set(None)

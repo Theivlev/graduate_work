@@ -63,8 +63,8 @@ class RedisSettings(BaseSettings):
 
 
 class RabbitConfig(BaseSettings):
-    default_user: str
-    default_pass: str
+    user: str
+    password: str
     host: str
     port: int
     vhost: str = "/"
@@ -73,10 +73,27 @@ class RabbitConfig(BaseSettings):
     model_config = SettingsConfigDict(env_file=".env", extra="ignore", env_prefix="RABBITMQ_")
 
     def model_post_init(self, __context):
-        self.dsn = f"amqp://{self.default_user}:{self.default_pass}@{self.host}:{self.port}/"
+        self.dsn = f"amqp://{self.user}:{self.password}@{self.host}:{self.port}/"
+
+
+class SentrySettings(BaseSettings):
+    """Настройки Sentry."""
+
+    host: str
+    port: int
+    key: str
+    dsn: str
+
+    model_config = SettingsConfigDict(env_file=".env", extra="ignore", env_prefix="SDK_SENTRY_")
+
+    def model_post_init(self, __context):
+        """Формируем DSN после загрузки переменных."""
+
+        self.dsn = f"http://{self.key}@{self.host}:{self.port}/1"
 
 
 rabbitmq_settings = RabbitConfig()  # type: ignore
 project_settings = ProjectSettings()  # type: ignore
 postgres_settings = PostgresSettings()  # type: ignore
 redis_settings = RedisSettings()  # type: ignore
+sentry_settings = SentrySettings()  # type: ignore

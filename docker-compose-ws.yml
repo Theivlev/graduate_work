@@ -150,8 +150,8 @@ services:
       - ./nginx/configs:/etc/nginx/conf.d:ro
       - ./fastapi_ws/src/static:/usr/share/nginx/html/static:ro
     depends_on:
-      - fastapi1
-      - fastapi2
+      # - fastapi1
+      # - fastapi2
       - fastapi_auth1
       # - fastapi_auth2
       - fastapi_ugc

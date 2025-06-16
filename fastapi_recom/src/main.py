@@ -1,14 +1,17 @@
 from contextlib import asynccontextmanager
 
+import sentry_sdk
 from fastapi.responses import ORJSONResponse
 from src.api.routers import main_router
-from src.core.config import project_settings, redis_settings
+from src.core.config import project_settings, redis_settings, sentry_settings
 from src.core.logger import request_id_var
 from src.db.postgres import create_database
 from src.db.redis_cache import RedisCacheManager
 from src.rabbitmq.app import app_broker
 
 from fastapi import FastAPI, Request, status
+
+sentry_sdk.init(dsn=sentry_settings.dsn, traces_sample_rate=1.0)
 
 
 @asynccontextmanager

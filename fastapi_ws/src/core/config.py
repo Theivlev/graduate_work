@@ -108,8 +108,25 @@ class WsQueueSettings(BaseSettings):
     """Настройки имён exchange, очередей и routing key для websocket сервиса."""
 
     ws_queue: str
+    recom_queue: str
 
     model_config = SettingsConfigDict(env_file=".env", extra="ignore", env_prefix="WS_")
+
+
+class SentrySettings(BaseSettings):
+    """Настройки Sentry."""
+
+    host: str
+    port: int
+    key: str
+    dsn: str
+
+    model_config = SettingsConfigDict(env_file=".env", extra="ignore", env_prefix="SDK_SENTRY_")
+
+    def model_post_init(self, __context):
+        """Формируем DSN после загрузки переменных."""
+
+        self.dsn = f"http://{self.key}@{self.host}:{self.port}/1"
 
 
 project_settings = ProjectSettings()  # type: ignore
@@ -119,3 +136,4 @@ mail_queue_settings = MailQueueSettings()  # type: ignore
 rabbit_settings = RabbitMQSettings()  # type: ignore
 grpc_settings = GRPCSettings()  # type: ignore
 ws_settings = WsQueueSettings()  # type: ignore
+sentry_settings = SentrySettings()  # type: ignore

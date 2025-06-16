@@ -54,7 +54,7 @@
       "internal": false
     },
     {
-      "name": "actions",
+      "name": "recommendations",
       "vhost": "/",
       "type": "direct",
       "durable": true,
@@ -97,7 +97,7 @@
       "auto_delete": false
     },
     {
-      "name": "actions",
+      "name": "recommendations",
       "vhost": "/",
       "durable": true,
       "auto_delete": false
@@ -133,11 +133,11 @@
       "routing_key": "ws"
     },
     {
-      "source": "actions",
+      "source": "recommendations",
       "vhost": "/",
-      "destination": "actions",
+      "destination": "recommendations",
       "destination_type": "queue",
-      "routing_key": "actions"
+      "routing_key": "recommendations"
     }
   ]
 }

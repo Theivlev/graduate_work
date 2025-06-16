@@ -29,11 +29,29 @@ filebeat.inputs:
 - type: filestream
   enabled: true
   paths:
-    - /var/log/flask/*
+    - /var/log/fastapi_ugc/*
   json:
     keys_under_root: true
     add_error_key:
-  tags: ["flask"]
+  tags: ["fastapi_ugc"]
+
+- type: filestream
+  enabled: true
+  paths:
+    - /var/log/fastapi_ws/*
+  json:
+    keys_under_root: true
+    add_error_key:
+  tags: ["fastapi_ws"]
+
+- type: filestream
+  enabled: true
+  paths:
+    - /var/log/fastapi_recom/*
+  json:
+    keys_under_root: true
+    add_error_key:
+  tags: ["fastapi_recom"]
 
 output.logstash:
   enabled: true
