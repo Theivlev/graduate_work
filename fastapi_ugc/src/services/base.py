@@ -1,17 +1,17 @@
 import logging
 from datetime import datetime
-from typing import Generic, Type, List
+from typing import Generic, List, Type
 from uuid import UUID
 
 from broker.kafka import kafka_producer
 from src.core.config import kafka_settings
-from src.crud.base import ModelType, BaseMongoCRUD
+from src.crud.base import BaseMongoCRUD, ModelType
 from src.shemas.broker import KafkaSendMessage
 
 logger = logging.getLogger(__name__)
 
 
-class BaseService(Generic[ModelType]):
+class BaseService(Generic[ModelType]):  # type: ignore[misc]
     """Базовый класс сервиса."""
 
     def __init__(self, model: Type[ModelType]):
