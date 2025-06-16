@@ -1,4 +1,4 @@
-from typing import Any, List, Type
+from typing import List, Type
 
 from models.dto import AbstractDTO
 

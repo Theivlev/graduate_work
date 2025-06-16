@@ -1,7 +1,5 @@
 import logging
-from uuid import UUID
 
-from faststream import FastStream
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
 from src.db.postgres import engine
@@ -15,8 +13,6 @@ from src.schemas.actions_user import ActionsUserDTO
 from src.services.actions import actions_service
 from src.services.similarity import similarity_service
 from src.services.vector import vector_service
-
-from fastapi import Depends
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s")
 logger = logging.getLogger(__name__)

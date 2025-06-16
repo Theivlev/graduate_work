@@ -1,12 +1,8 @@
-import json
 from datetime import datetime
 from uuid import UUID
 
-from aiokafka import ConsumerRecord
-from pydantic import field_serializer
-
-from models.dto import AbstractDTO
 from models.mixins import UUIDMixin
+from pydantic import field_serializer
 
 
 class MessageDTO(UUIDMixin):

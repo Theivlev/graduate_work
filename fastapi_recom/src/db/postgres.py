@@ -1,12 +1,8 @@
-import asyncio
 import logging
 import os
 import re
 import uuid
 
-from alembic import command
-from alembic.config import Config
-from redis import asyncio as aioredis
 from sqlalchemy import UUID, MetaData
 from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine
 from sqlalchemy.orm import Mapped, declarative_base, declared_attr, mapped_column, sessionmaker
