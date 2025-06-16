@@ -1,10 +1,9 @@
 from typing import Generic, List, Optional, Type, TypeVar
 
 from bson import ObjectId
-
 from src.models.base import BaseDocument
 
-ModelType = TypeVar("ModelType", bound=BaseDocument)
+ModelType = TypeVar("ModelType", bound=BaseDocument)  # type: ignore[misc]
 
 
 class BaseMongoCRUD(Generic[ModelType]):
