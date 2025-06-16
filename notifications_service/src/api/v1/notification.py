@@ -1,5 +1,4 @@
 from typing import List, Tuple
-from uuid import UUID
 
 from src.paginations.pagination import PaginationLimits
 from src.service.notifications import NotificationsService, get_notifications_service

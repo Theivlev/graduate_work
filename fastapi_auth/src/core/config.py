@@ -197,6 +197,15 @@ class MailQueueSettings(BaseSettings):
     model_config = SettingsConfigDict(env_file=".env", extra="ignore", env_prefix="MAIL_")
 
 
+class WsQueueSettings(BaseSettings):
+    """Настройки имён exchange, очередей и routing key для websocket сервиса."""
+
+    ws_exchange: str
+    ws_routing_key: str
+
+    model_config = SettingsConfigDict(env_file=".env", extra="ignore", env_prefix="WS_")
+
+
 project_settings = ProjectSettings()  # type: ignore
 redis_settings = RedisSettings()  # type: ignore
 postgres_settings = PostgresSettings()  # type: ignore
@@ -207,3 +216,4 @@ jaeger_settings = JaegerSettings()  # type: ignore
 rabbit_settings = RabbitMQSettings()  # type: ignore
 sentry_settings = SentrySettings()  # type: ignore
 mail_queue_settings = MailQueueSettings()  # type: ignore
+ws_settings = WsQueueSettings()  # type: ignore

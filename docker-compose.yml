@@ -1,44 +1,4 @@
 services:
-  elasticsearch:
-    image: elasticsearch:8.7.0
-    container_name: elasticsearch
-    restart: always
-    volumes:
-      - elasticsearch:/usr/share/elasticsearch/data
-    environment:
-      - discovery.type=single-node
-      - xpack.security.enabled=false
-      - ES_JAVA_OPTS=-Xms200m -Xmx200m
-    depends_on:
-      - theatre-db
-    ports:
-      - "9200:9200"
-
-  etl:
-    build:
-      context: ./elastic
-      dockerfile: Dockerfile
-    container_name: etl
-    restart: always
-    env_file:
-      - .env
-    depends_on:
-      - theatre-db
-      - elasticsearch
-      - redis
-
-  clickhouse_etl:
-    container_name: clickhouse_etl
-    build:
-        context: ./clickhouse
-        dockerfile: Dockerfile
-    env_file:
-        - .env
-    depends_on:
-        - clickhouse-node1
-        - clickhouse-node2
-        - clickhouse-node3
-        - clickhouse-node4
 
   fastapi1:
     build:
@@ -50,11 +10,9 @@ services:
     env_file:
       - .env
     depends_on:
-      - etl
       - redis
       - theatre-db
       - jaeger
-      - kafka-0
     volumes:
       - /tmp/logs/fastapi/:/var/log/fastapi/
 
@@ -68,11 +26,9 @@ services:
     env_file:
       - .env
     depends_on:
-      - etl
       - redis
       - theatre-db
       - jaeger
-      - kafka-0
     volumes:
       - /tmp/logs/fastapi/:/var/log/fastapi/
 
@@ -89,9 +45,8 @@ services:
       - redis
       - theatre-db
       - jaeger
-      - kafka-0
     volumes:
-      - ./fastapi_auth:/opt/app 
+      - ./fastapi_auth:/opt/app
       - /tmp/logs/fastapi_auth/:/var/log/fastapi_auth/
 
   fastapi_auth2:
@@ -107,9 +62,8 @@ services:
       - redis
       - theatre-db
       - jaeger
-      - kafka-0
-    volumes:  
-      - ./fastapi_auth:/opt/app 
+    volumes:
+      - ./fastapi_auth:/opt/app
       - /tmp/logs/fastapi_auth/:/var/log/fastapi_auth/
 
 
@@ -125,21 +79,50 @@ services:
     restart: unless-stopped
     depends_on:
       - ugc_mongo_db
+    volumes:
+      - /tmp/logs/fastapi_ugc/:/var/log/fastapi_ugc/
 
   fastapi_ws:
     build:
       context: ./fastapi_ws
       dockerfile: Dockerfile
     container_name: ws_1
-    volumes:
-      - ./static:/app/static
     ports:
       - "8090:8090"
+    restart: unless-stopped
     env_file:
       - .env
     depends_on:
-      - redis
-      - theatre-db
+      rabbitmq:
+        condition: service_healthy
+      fastapi_auth1:
+        condition: service_started
+      redis:
+        condition: service_started
+      theatre-db:
+        condition: service_started
+    volumes:
+      - ./static:/app/static
+      - /tmp/logs/fastapi_ws/:/var/log/fastapi_ws/
+
+  fastapi_recom:
+    build:
+      context: ./fastapi_recom
+      dockerfile: Dockerfile
+    container_name: fastapi_recom
+    ports:
+      - "8050:8050"
+    env_file:
+      - .env
+    depends_on:
+      rabbitmq:
+        condition: service_healthy
+      redis:
+        condition: service_started
+      theatre-db:
+        condition: service_started
+    volumes:
+      - /tmp/logs/fastapi_recom/:/var/log/fastapi_recom/
 
   grpc_auth:
     build:
@@ -153,11 +136,9 @@ services:
     env_file:
       - .env
     depends_on:
-      - etl
       - redis
       - theatre-db
       - jaeger
-      - kafka-0
     volumes:
       - ./fastapi_auth:/opt/app
       - /tmp/logs/fastapi_auth/:/var/log/fastapi_auth/
@@ -185,6 +166,7 @@ services:
       - fastapi_auth2
       - fastapi_ugc
       - fastapi_ws
+      - fastapi_recom
     ports:
       - "80:80"
 
@@ -209,6 +191,176 @@ services:
         - ./fastapi_ugc/mongo:/docker-entrypoint-initdb.d
       ports:
         - "27017:27017"
+
+  rabbitmq:
+    image: rabbitmq:4.0.7-management
+    container_name: rabbitmq
+    ports:
+      - "${RABBITMQ_PORT}:${RABBITMQ_PORT}"
+      - "15672:15672"
+    env_file:
+      - .env
+    healthcheck:
+      test: rabbitmq-diagnostics -q ping
+      interval: 10s
+      timeout: 10s
+      retries: 5
+    volumes:
+      - ./deploy/rabbitmq/rabbitmq.conf:/etc/rabbitmq/rabbitmq.conf:ro
+      - ./deploy/rabbitmq/definitions.json:/etc/rabbitmq/definitions.json:ro
+      - rabbitmq_data:/var/lib/rabbitmq
+
+
+  mail-service:
+    build:
+      context: ./mail
+      dockerfile: Dockerfile
+    container_name: mail-service
+    env_file:
+      - .env
+    depends_on:
+      rabbitmq:
+        condition: service_healthy
+    volumes:
+      - ./mail:/app
+
+  mailpit:
+    image: axllent/mailpit
+    ports:
+      - "1025:1025"   # SMTP
+      - "8025:8025"   # Web UI
+
+  jaeger:
+    image: jaegertracing/all-in-one:latest
+    container_name: jaeger
+    ports:
+      - "14268:14268"
+      - "16686:16686"
+
+  logstash:
+    image: logstash:8.10.2
+    depends_on:
+      - elkelasticsearch
+    env_file:
+      - .env
+    ports:
+      - "5044:5044/udp"
+    volumes:
+      - /tmp/logs/nginx/:/var/log/nginx/:ro
+      - /tmp/logs/fastapi/:/var/log/fastapi/:ro
+      - /tmp/logs/fastapi_auth/:/var/log/fastapi_auth/:ro
+      - ./deploy/logstash.conf:/config/logstash.conf:ro
+    command: logstash -f /config/logstash.conf
+    links:
+      - elkelasticsearch
+
+  sentry-api:
+    image: sentry:latest
+    env_file:
+      - .env
+    depends_on:
+      - theatre-db
+      - redis
+    ports:
+      - "9010:9000"
+
+  sentry-worker:
+    image: sentry:latest
+    env_file:
+      - .env
+    depends_on:
+      - theatre-db
+      - redis
+    command: sentry run worker
+
+  sentry-cron:
+    image: sentry:latest
+    env_file:
+      - .env
+    depends_on:
+      - theatre-db
+      - redis
+    command: sentry run cron
+
+  kibana:
+    image: kibana:8.10.2
+    ports:
+      - "5601:5601"
+    depends_on:
+      - elkelasticsearch
+    environment:
+      - ELASTICSEARCH_HOSTS=http://${ELK_ES_DSN}
+    links:
+      - elkelasticsearch
+
+  elasticsearch:
+    image: elasticsearch:8.7.0
+    container_name: elasticsearch
+    restart: always
+    volumes:
+      - elasticsearch:/usr/share/elasticsearch/data
+    environment:
+      - discovery.type=single-node
+      - xpack.security.enabled=false
+      - ES_JAVA_OPTS=-Xms200m -Xmx200m
+    depends_on:
+      - theatre-db
+    ports:
+      - "9200:9200"
+
+  elkelasticsearch:
+    image: elasticsearch:8.10.2
+    environment:
+      - discovery.type=single-node
+      - ES_JAVA_OPTS=-Xms512m -Xmx512m
+      - xpack.security.enabled=false
+    ports:
+      - "9250:9200"
+    volumes:
+      - elkelasticsearch:/usr/share/elasticsearch/data
+
+  filebeat:
+    image: elastic/filebeat:8.10.2
+    volumes:
+      - /tmp/logs/nginx/:/var/log/nginx:ro
+      - /tmp/logs/fastapi/:/var/log/fastapi/:ro
+      - /tmp/logs/fastapi_auth/:/var/log/fastapi_auth/:ro
+      - ./deploy/filebeat.yml:/usr/share/filebeat/filebeat.yml:ro
+    command: filebeat -e -strict.perms=false
+    env_file:
+      - .env
+    depends_on:
+      - nginx
+      - logstash
+      - elkelasticsearch
+      - kibana
+
+  etl:
+    build:
+      context: ./elastic
+      dockerfile: Dockerfile
+    container_name: etl
+    restart: always
+    env_file:
+      - .env
+    depends_on:
+      - theatre-db
+      - elasticsearch
+      - redis
+
+  clickhouse_etl:
+    container_name: clickhouse_etl
+    build:
+        context: ./clickhouse
+        dockerfile: Dockerfile
+    env_file:
+        - .env
+    depends_on:
+        - clickhouse-node1
+        - clickhouse-node2
+        - clickhouse-node3
+        - clickhouse-node4
+
   zookeeper:
     image: zookeeper:3.8
     container_name: zookeeper
@@ -265,13 +417,6 @@ services:
       - ./clickhouse/database/init.sql:/docker-entrypoint-initdb.d/init.sql
     depends_on:
       - zookeeper
-
-  jaeger:
-    image: jaegertracing/all-in-one:latest
-    container_name: jaeger
-    ports:
-      - "14268:14268"
-      - "16686:16686"
 
   kafka-0:
     image: bitnami/kafka:3.4
@@ -353,123 +498,8 @@ services:
       - KAFKA_CLUSTERS_0_BOOTSTRAP_SERVERS=kafka-0:9092
       - KAFKA_CLUSTERS_0_NAME=kraft
 
-  rabbitmq:
-    image: rabbitmq:4.0.7-management
-    container_name: rabbitmq
-    ports:
-      - "${RABBITMQ_PORT}:${RABBITMQ_PORT}"
-      - "15672:15672"
-    env_file: .env
-    volumes:
-      - rabbitmq_data:/var/lib/rabbitmq
-    environment:
-      - RABBITMQ_DEFAULT_USER=${RABBITMQ_USER}
-      - RABBITMQ_DEFAULT_PASS=${RABBITMQ_PASSWORD}
-
-
-  mail-service:
-    build: ./mail
-    container_name: mail-service
-    env_file:
-      - .env
-    volumes:
-     - ./mail:/app
-
-  mailpit:
-    image: axllent/mailpit
-    ports:
-      - "1025:1025"   # SMTP
-      - "8025:8025"   # Web UI
-
-  logstash:
-    image: logstash:8.10.2
-    depends_on:
-      - elkelasticsearch
-    env_file:
-      - .env
-    ports:
-      - "5044:5044/udp"
-    volumes:
-      - /tmp/logs/nginx/:/var/log/nginx/:ro
-      - /tmp/logs/fastapi/:/var/log/fastapi/:ro
-      - /tmp/logs/fastapi_auth/:/var/log/fastapi_auth/:ro
-      - ./deploy/logstash.conf:/config/logstash.conf:ro
-    command: logstash -f /config/logstash.conf
-    links:
-      - elkelasticsearch
-
-  sentry-api:
-    image: sentry:latest
-    env_file:
-      - .env
-    depends_on:
-      - theatre-db
-      - redis
-    ports:
-      - "9010:9000"
-
-  sentry-worker:
-    image: sentry:latest
-    env_file:
-      - .env
-    depends_on:
-      - theatre-db
-      - redis
-    command: sentry run worker
-
-  sentry-cron:
-    image: sentry:latest
-    env_file:
-      - .env
-    depends_on:
-      - theatre-db
-      - redis
-    command: sentry run cron
-
-  kibana:
-    image: kibana:8.10.2
-    ports:
-      - "5601:5601"
-    depends_on:
-      - elkelasticsearch
-    environment:
-      - ELASTICSEARCH_HOSTS=http://${ELK_ES_DSN}
-    links:
-      - elkelasticsearch
-
-  elkelasticsearch:
-    image: elasticsearch:8.10.2
-    environment:
-      - discovery.type=single-node
-      - ES_JAVA_OPTS=-Xms512m -Xmx512m
-      - xpack.security.enabled=false
-    ports:
-      - "9250:9200"
-    volumes:
-      - elkelasticsearch:/usr/share/elasticsearch/data
-
-  filebeat:
-    image: elastic/filebeat:8.10.2
-    volumes:
-      - /tmp/logs/nginx/:/var/log/nginx:ro
-      - /tmp/logs/fastapi/:/var/log/fastapi/:ro
-      - /tmp/logs/fastapi_auth/:/var/log/fastapi_auth/:ro
-      - ./deploy/filebeat.yml:/usr/share/filebeat/filebeat.yml:ro
-    command: filebeat -e -strict.perms=false
-    env_file:
-      - .env
-    depends_on:
-      - nginx
-      - logstash
-      - elkelasticsearch
-      - kibana
-
 volumes:
   postgres_data:
-  elasticsearch:
   elkelasticsearch:
   redis_data:
-  kafka_0_data:
-  kafka_1_data:
-  kafka_2_data:
   rabbitmq_data:

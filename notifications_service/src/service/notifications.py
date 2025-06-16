@@ -1,15 +1,12 @@
+import logging
 from dataclasses import dataclass
 from typing import Any
 
-from src.models.notifications import NotificationRecord
 from src.crud.base import BaseMongoCRUD
 from src.db.rabbitmq import rabbitmq_producer
+from src.models.notifications import NotificationRecord
 from src.service.handlers.base import BaseHandler
 from src.shemas.delivery import DeliveryDTO
-
-
-import logging
-
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s")
 logger = logging.getLogger(__name__)

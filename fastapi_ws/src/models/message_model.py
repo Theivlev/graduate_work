@@ -8,6 +8,8 @@ from src.db.postgres import Base
 
 
 class Message(Base):
+    """Модель сообщений."""
+
     text: Mapped[str]
     created_at: Mapped[datetime] = mapped_column(default=datetime.utcnow)
     room_id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), ForeignKey("room.id"))

@@ -49,7 +49,7 @@ services:
       - redis
       - theatre-db
     volumes:
-      - ./fastapi_auth:/opt/app 
+      - ./fastapi_auth:/opt/app
       - /tmp/logs/fastapi_auth/:/var/log/fastapi_auth/
 
   fastapi_auth2:
@@ -64,15 +64,15 @@ services:
     depends_on:
       - redis
       - theatre-db
-    volumes:  
-      - ./fastapi_auth:/opt/app 
+    volumes:
+      - ./fastapi_auth:/opt/app
       - /tmp/logs/fastapi_auth/:/var/log/fastapi_auth/
 
   fastapi_ugc:
     build:
       context: ./fastapi_ugc
       dockerfile: Dockerfile
-    container_name: ugc
+    container_name: fastapi_ugc
     env_file:
       - .env
     ports:

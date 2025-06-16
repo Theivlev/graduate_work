@@ -16,8 +16,8 @@ class Settings(BaseSettings):
     project_auth_version: str
     project_auth_terms_of_service: str
 
-    mongo_notify_dsn: MongoDsn = Field(..., env='MONGO_NOTIFY_DSN')
-    mongo_notify_db: str = Field(..., env='MONGO_NOTIFY_DB')
+    mongo_notify_dsn: MongoDsn = Field(..., env="MONGO_NOTIFY_DSN")
+    mongo_notify_db: str = Field(..., env="MONGO_NOTIFY_DB")
 
     auth_grpc_host: str
     auth_grpc_port: int

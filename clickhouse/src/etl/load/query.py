@@ -1,13 +1,15 @@
-from typing import Any, List, Type
+from typing import List, Type
+
+from models.dto import AbstractDTO
 
 
 class QueryBuilder:
     @staticmethod
-    def build_insert_query(table_name: str, model_class: Type[Any]) -> str:
+    def build_insert_query(table_name: str, model_class: Type[AbstractDTO]) -> str:
         """
         Формирует SQL-запрос для вставки данных в таблицу.
         """
-        columns = ", ".join(model_class.__annotations__.keys())
+        columns = ", ".join(model_class.model_fields.keys())
         return f"INSERT INTO {table_name} ({columns}) VALUES"
 
     @staticmethod

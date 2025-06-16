@@ -13,4 +13,3 @@ opentelemetry-exporter-jaeger==1.17.0
 protobuf==4.25.6
 python-json-logger==2.0.4
 sentry-sdk[fastapi]==0.10.2
-

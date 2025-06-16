@@ -12,8 +12,8 @@ from src.db.redis_cache import RedisClientFactory
 from src.models.auth_history import AuthHistory
 from src.models.user import User
 from src.schemas.user_schema import UserCreate
-from src.utils.detect_device import detect_device_type
 from src.services.email_tasks import send_confirmation_email_task
+from src.utils.detect_device import detect_device_type
 
 from fastapi import Depends, Request
 
@@ -66,7 +66,7 @@ class UserManager(UUIDIDMixin, BaseUserManager[User, UUID]):
     async def on_after_register(self, user: User, request: Request | None = None) -> None:
         """Выполняется после регистрации пользователя."""
         if user.is_superuser:
-          return
+            return
         await send_confirmation_email_task(user)
 
     async def on_after_login(self, user: User, request: Request | None = None, response=None) -> None:

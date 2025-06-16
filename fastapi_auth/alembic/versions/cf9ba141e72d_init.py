@@ -1,13 +1,12 @@
 """init
 
 Revision ID: cf9ba141e72d
-Revises: 
+Revises:
 Create Date: 2025-05-09 20:02:05.766587
 
 """
-from alembic import op
 import sqlalchemy as sa
-
+from alembic import op
 
 # revision identifiers, used by Alembic.
 revision = "cf9ba141e72d"
@@ -23,7 +22,9 @@ def upgrade():
         sa.Column("id", sa.UUID(), nullable=False),
         sa.Column("name", sa.String(), nullable=False),
         sa.Column(
-            "permissions", sa.ARRAY(sa.Enum("read", "write", "delete", "update", name="permissions", schema="auth")), nullable=False
+            "permissions",
+            sa.ARRAY(sa.Enum("read", "write", "delete", "update", name="permissions", schema="auth")),
+            nullable=False,
         ),
         sa.PrimaryKeyConstraint("id"),
         schema="auth",
@@ -68,6 +69,7 @@ def upgrade():
         sa.PrimaryKeyConstraint("id", "user_id", "role_id"),
         schema="auth",
     )
+
 
 def downgrade():
     op.drop_table("user_role", schema="auth")

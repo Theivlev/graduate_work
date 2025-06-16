@@ -1,15 +1,14 @@
-import logging
 import json
+import logging
 from smtplib import SMTPException
 
 import aio_pika
 from aio_pika.abc import AbstractChannel, AbstractIncomingMessage
+from core.config import mail_queue_settings
 from schemas.rabbit import EmailMessage
 from services.smtp import send_email_smtp
-from core.config import mail_queue_settings
 
 from .grpc.grpc_client_mail import get_auth_client
-
 
 logger = logging.getLogger(__name__)
 
