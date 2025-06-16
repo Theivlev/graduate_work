@@ -45,6 +45,7 @@ class MailQueueSettings(BaseSettings):
     mail_queue: str
     retry_queue: str
     failed_queue: str
+    recom_queue: str
 
     mail_routing_key: str
     retry_routing_key: str
@@ -53,10 +54,29 @@ class MailQueueSettings(BaseSettings):
     model_config = SettingsConfigDict(env_file=".env", extra="ignore", env_prefix="MAIL_")
 
 
+class PostgresSettings(BaseSettings):
+    """Настройки Postgres."""
+
+    db: str
+    host: str
+    port: int
+    user: str
+    password: str
+    dsn: str = ""
+
+    model_config = SettingsConfigDict(env_file=".env", extra="ignore", env_prefix="POSTGRES_")
+
+    def model_post_init(self, __context):
+        """Формируем DSN после загрузки переменных"""
+
+        self.dsn = f"postgresql+asyncpg://{self.user}:{self.password}@{self.host}:{self.port}/{self.db}"
+
+
 rabbit_settings = RabbitMQSettings()  # type: ignore
 grpc_settings = GRPCSettings()  # type: ignore
 smtp_settings = SMTPSettings()  # type: ignore
 mail_queue_settings = MailQueueSettings()  # type: ignore
+postgres_settings = PostgresSettings()  # type: ignore
 
 # Настройки логирования
 LOGGER_FORMAT = "%(asctime)s [%(levelname)s] - %(message)s"

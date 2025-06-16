@@ -28,7 +28,6 @@ async def confirm_email(short_id: str, session: AsyncSession = Depends(get_async
 
     user_id = payload["user_id"]
     redirect_url = payload["redirectUrl"]
-    print(f"user_id: {user_id}, redirect_url: {redirect_url}")
 
     user = await session.get(User, user_id)
     if not user:

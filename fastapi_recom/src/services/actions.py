@@ -80,7 +80,6 @@ class ActionsService:
 
                 except ValueError as e:
                     logger.warning(f"Ошибка при обработке рейтинга: {e}")
-                    print(f"Некорректное значение рейтинга: {e}")
 
             await session.commit()
             return True

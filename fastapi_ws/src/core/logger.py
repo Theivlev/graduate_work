@@ -1,13 +1,39 @@
+import logging
+import os
+from contextvars import ContextVar
+
 LOGGING_FORMAT = "%(asctime)s [%(levelname)s] %(name)s: %(message)s"
-LOGGING_VERBOSE_FORMAT = "%(asctime)s [%(levelname)s] %(name)s " "%(funcName)s:%(lineno)d: %(message)s"
+LOGGING_JSON_FORMAT = (
+    "%(asctime)s %(levelname)s %(name)s %(module)s %(funcName)s %(lineno)d %(request_id)s %(message)s"
+)
 LOGGING_DATEFMT = "%d-%m-%Y %H:%M:%S"
+
+request_id_var = ContextVar("request_id", default=None)
+
+BASE_DIR = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+
+
+class RequestIdFilter(logging.Filter):
+    def filter(self, record):
+        record.request_id = request_id_var.get()
+        return True
+
 
 LOGGING_CONFIG = {
     "version": 1,
     "disable_existing_loggers": False,
+    "filters": {
+        "request_id": {
+            "()": RequestIdFilter,
+        },
+    },
     "formatters": {
         "standard": {"format": LOGGING_FORMAT, "datefmt": LOGGING_DATEFMT},
-        "verbose": {"format": LOGGING_VERBOSE_FORMAT, "datefmt": LOGGING_DATEFMT},
+        "json": {
+            "()": "pythonjsonlogger.jsonlogger.JsonFormatter",
+            "format": LOGGING_JSON_FORMAT,
+            "datefmt": LOGGING_DATEFMT,
+        },
     },
     "handlers": {
         "default": {
@@ -16,23 +42,24 @@ LOGGING_CONFIG = {
             "class": "logging.StreamHandler",
             "stream": "ext://sys.stdout",
         },
-        "file": {
+        "file_json": {
             "level": "DEBUG",
-            "formatter": "verbose",
+            "formatter": "json",
             "class": "logging.handlers.RotatingFileHandler",
-            "filename": "app.log",
+            "filename": f"{BASE_DIR}/app.log",
+            "filters": ["request_id"],
             "maxBytes": 1024 * 1024 * 5,
             "backupCount": 5,
         },
     },
     "loggers": {
         "": {
-            "handlers": ["default", "file"],
+            "handlers": ["default", "file_json"],
             "level": "DEBUG",
             "propagate": True,
         },
         "your_module_name": {
-            "handlers": ["file"],
+            "handlers": ["file_json"],
             "level": "INFO",
             "propagate": False,
         },
