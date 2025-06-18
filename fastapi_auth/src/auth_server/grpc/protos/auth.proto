@@ -1,0 +1,40 @@
+syntax = "proto3";
+
+package auth;
+
+// Authorization service that verifies a token
+service AuthService {
+  // Accepts a token and returns the verification result
+  rpc CheckToken (CheckTokenRequest) returns (CheckTokenResponse) {}
+
+  // Returns user information by user ID
+  rpc GetUserInfo (GetUserInfoRequest) returns (GetUserInfoResponse) {}
+}
+
+// Token verification request
+message CheckTokenRequest {
+  string token = 1;
+}
+
+// Response: whether the token is valid and extracted data
+message CheckTokenResponse {
+  bool is_valid = 1;          // true if the token is valid
+  string user_id = 2;         // user ID
+  repeated string roles = 3;  // user roles
+  bool is_subscribed = 4;     // whether the user is subscribed
+  string error_message = 5;   // error message if token is invalid
+}
+
+
+// Request for user information
+message GetUserInfoRequest {
+  string user_id = 1;         // user ID
+}
+
+// Response with user information
+message GetUserInfoResponse {
+  string name = 1;
+  string surname = 2;
+  string patronymic = 3;
+  string email = 4;
+}

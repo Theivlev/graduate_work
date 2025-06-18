@@ -1,0 +1,198 @@
+version: '3.8'
+
+# Модуль эмуляций контейнеров для работы Nginx
+services:
+  fastapi1:
+    image: alpine
+    stdin_open: true
+    tty: true
+
+  fastapi2:
+    image: alpine
+    stdin_open: true
+    tty: true
+
+  fastapi_recom:
+    image: alpine
+    stdin_open: true
+    tty: true
+
+
+# Модуль работы с пользователями и передачей в другие контейнеры
+  fastapi_auth1:
+    build:
+      context: ./fastapi_auth
+      dockerfile: Dockerfile
+    container_name: authapi_1
+    command: >
+      bash -c "/opt/app/entrypoint.sh uvicorn src.main:app --reload --host $UVICORN_HOST --port $UVICORN_PORT_AUTH"
+    env_file:
+      - .env
+    depends_on:
+      - redis
+      - theatre-db
+    volumes:
+      - ./fastapi_auth:/opt/app
+      - /tmp/logs/fastapi_auth/:/var/log/fastapi_auth/
+
+  # fastapi_auth2:
+  #   build:
+  #     context: ./fastapi_auth
+  #     dockerfile: Dockerfile
+  #   container_name: authapi_2
+  #   command: >
+  #     bash -c "/opt/app/entrypoint.sh uvicorn src.main:app --reload --host $UVICORN_HOST --port $UVICORN_PORT_AUTH"
+  #   env_file:
+  #     - .env
+  #   depends_on:
+  #     - redis
+  #     - theatre-db
+  #   volumes:
+  #     - ./fastapi_auth:/opt/app
+  #     - /tmp/logs/fastapi_auth/:/var/log/fastapi_auth/
+
+  grpc_auth:
+    build:
+      context: ./fastapi_auth
+      dockerfile: Dockerfile
+    container_name: grpc_auth
+    command: >
+      bash -c "cd /opt/app && python -m src.auth_server.grpc.grpc_server_entrypoint"
+    expose:
+      - "50051"
+    env_file:
+      - .env
+    depends_on:
+      - redis
+      - theatre-db
+    volumes:
+      - ./fastapi_auth:/opt/app
+      - /tmp/logs/fastapi_auth/:/var/log/fastapi_auth/
+
+# Модуль работы с лайками и хранением данных в МонгоДБ
+  # fastapi_ugc:
+  #   build:
+  #     context: ./fastapi_ugc
+  #     dockerfile: Dockerfile
+  #   container_name: fastapi_ugc
+  #   env_file:
+  #     - .env
+  #   ports:
+  #     - "8060:8060"
+  #   depends_on:
+  #     - ugc_mongo_db
+
+  # ugc_mongo_db:
+  #     image: mongo
+  #     env_file:
+  #       - .env
+  #     restart: always
+  #     volumes:
+  #       - ./fastapi_ugc/mongo:/docker-entrypoint-initdb.d
+  #     ports:
+  #       - "27017:27017"
+
+# #Модуль эмуляции лайков, избранного и т.п.
+  fastapi_ugc:
+    image: alpine
+    stdin_open: true
+    tty: true
+
+#Модуль работы оповещений через чат с пользователем.
+  fastapi_ws:
+    build:
+      context: ./fastapi_ws
+      dockerfile: Dockerfile
+    container_name: ws_1
+    volumes:
+      - ./static:/app/static
+    ports:
+      - "8090:8090"
+    env_file:
+      - .env
+    depends_on:
+      - redis
+      - theatre-db
+
+#Модуль эмулации чата.
+  # fastapi_ws:
+  #   image: alpine
+  #   stdin_open: true
+  #   tty: true
+
+  rabbitmq:
+    image: rabbitmq:4.0.7-management
+    container_name: rabbitmq
+    ports:
+      - "${RABBITMQ_PORT}:${RABBITMQ_PORT}"
+      - "15672:15672"
+    env_file:
+      - .env
+    volumes:
+      - ./deploy/rabbitmq/rabbitmq.conf:/etc/rabbitmq/rabbitmq.conf:ro
+      - ./deploy/rabbitmq/definitions.json:/etc/rabbitmq/definitions.json:ro
+      - rabbitmq_data:/var/lib/rabbitmq
+
+  redis:
+    image: redislabs/redismod:latest
+    container_name: redis
+    expose:
+      - "6379"
+    restart: always
+    volumes:
+      - redis_data:/data
+
+  nginx:
+    image: nginx:latest
+    container_name: nginx
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./nginx/configs:/etc/nginx/conf.d:ro
+      - ./fastapi_ws/src/static:/usr/share/nginx/html/static:ro
+    depends_on:
+      # - fastapi1
+      # - fastapi2
+      - fastapi_auth1
+      # - fastapi_auth2
+      - fastapi_ugc
+      - fastapi_ws
+      - fastapi_recom
+    ports:
+      - "80:80"
+
+  theatre-db:
+    image: postgres:16
+    container_name: theatre-db
+    ports:
+      - "5432:5432"
+    env_file:
+      - .env
+    restart: always
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+#Модуль отправки писем из брокера сообщений
+  mailpit:
+    image: axllent/mailpit
+    ports:
+      - "1025:1025"   # SMTP
+      - "8025:8025"   # Web UI
+
+  mail-service:
+    build:
+      context: ./mail
+      dockerfile: Dockerfile
+    container_name: mail-service
+    env_file:
+      - .env
+    # depends_on:
+    #   - rabbitmq
+    volumes:
+      - ./mail:/app
+
+
+
+volumes:
+  postgres_data:
+  redis_data:
+  rabbitmq_data:

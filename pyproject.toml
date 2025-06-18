@@ -1,0 +1,33 @@
+[tool.ruff]
+line-length = 119
+
+[tool.ruff.lint]
+exclude = [
+    "./tests/*",
+    ".venv",
+    "./fastapi/alembic/*",
+    "*/grpc/*",
+    "./github",
+    "./fastapi_ws/alembic/*",
+    "./fastapi_ws/src/models/*"
+]
+
+[tool.ruff.lint.per-file-ignores]
+"*/__init__.py" = ["F401"]
+"./elastic/etl/extract/query.py" = ["E501"]
+
+
+[tool.black]
+line-length = 119
+target-version = ['py312']
+include = '\.pyi?$'
+exclude = '''
+/(
+  .git
+  | .tox
+  | .nox
+  | .venv
+  | build
+  | dist
+)/
+'''

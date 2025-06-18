@@ -1,0 +1,25 @@
+digraph notification_service {
+	fontsize=20 label="Участник 3: Персонализированные уведомления и интерактивный UI" labelloc=t
+	subgraph cluster_notification_service_components {
+		color=lightgrey label="Компоненты" style="rounded,filled"
+		channels [label="Каналы
+        • WebSocket
+        • Email
+        • Push" shape=box]
+		templates [label="Шаблоны
+        • Jinja2
+        • A/B тесты" shape=box]
+		queues [label="Очереди
+        • RabbitMQ
+        • Celery Tasks" shape=cylinder]
+	}
+	subgraph cluster_notification_service_tech {
+		color=lightblue label="Технологии" style="rounded,filled"
+		"Flask-SocketIO" [label="Flask-SocketIO" shape=plaintext]
+		smtplib [label=smtplib shape=plaintext]
+		notify2 [label=notify2 shape=plaintext]
+	}
+	queues -> channels [label="Задачи отправки" style=solid]
+	templates -> channels [label="Персонализация" style=solid]
+	channels -> queues [label="Статусы" style=dashed]
+}

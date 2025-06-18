@@ -1,0 +1,38 @@
+version: '3.9'
+services:
+  vertica:
+    image: jbfavre/vertica:latest
+    container_name: vertica
+    hostname: vertica
+    restart: always
+    ports:
+      - "5433:5433"
+
+  clickhouse:
+    image: yandex/clickhouse-server:latest
+    container_name: clickhouse
+    hostname: clickhouse
+    restart: always
+    ports:
+      - "8123:8123"
+      - "9000:9000"
+
+  vertica-script:
+    build:
+      context: ./vertica
+      dockerfile: Dockerfile
+    environment:
+      - VERTICA_HOST=127.0.0.1
+      - VERTICA_PORT=5433
+      - VERTICA_USER=dbadmin
+      - VERTICA_PASSWORD=''
+      - VERTICA_DATABASE=docker
+    depends_on:
+      - vertica
+
+  clickhouse-script:
+    build:
+      context: ./clickhouse
+      dockerfile: Dockerfile
+    depends_on:
+      - clickhouse

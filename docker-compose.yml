@@ -1,0 +1,505 @@
+services:
+
+  fastapi1:
+    build:
+      context: ./fastapi
+      dockerfile: Dockerfile
+    container_name: searchapi_1
+    ports:
+      - "8080:8080"
+    env_file:
+      - .env
+    depends_on:
+      - redis
+      - theatre-db
+      - jaeger
+    volumes:
+      - /tmp/logs/fastapi/:/var/log/fastapi/
+
+  fastapi2:
+    build:
+      context: ./fastapi
+      dockerfile: Dockerfile
+    container_name: searchapi_2
+    ports:
+      - "8081:8080"
+    env_file:
+      - .env
+    depends_on:
+      - redis
+      - theatre-db
+      - jaeger
+    volumes:
+      - /tmp/logs/fastapi/:/var/log/fastapi/
+
+  fastapi_auth1:
+    build:
+      context: ./fastapi_auth
+      dockerfile: Dockerfile
+    container_name: authapi_1
+    command: >
+      bash -c "/opt/app/entrypoint.sh uvicorn src.main:app --reload --host $UVICORN_HOST --port $UVICORN_PORT_AUTH"
+    env_file:
+      - .env
+    depends_on:
+      - redis
+      - theatre-db
+      - jaeger
+    volumes:
+      - ./fastapi_auth:/opt/app
+      - /tmp/logs/fastapi_auth/:/var/log/fastapi_auth/
+
+  fastapi_auth2:
+    build:
+      context: ./fastapi_auth
+      dockerfile: Dockerfile
+    container_name: authapi_2
+    command: >
+      bash -c "/opt/app/entrypoint.sh uvicorn src.main:app --reload --host $UVICORN_HOST --port $UVICORN_PORT_AUTH"
+    env_file:
+      - .env
+    depends_on:
+      - redis
+      - theatre-db
+      - jaeger
+    volumes:
+      - ./fastapi_auth:/opt/app
+      - /tmp/logs/fastapi_auth/:/var/log/fastapi_auth/
+
+
+  fastapi_ugc:
+    build:
+      context: ./fastapi_ugc
+      dockerfile: Dockerfile
+    container_name: fastapi_ugc
+    env_file:
+      - ./.env
+    ports:
+      - "8060:8060"
+    restart: unless-stopped
+    depends_on:
+      - ugc_mongo_db
+    volumes:
+      - /tmp/logs/fastapi_ugc/:/var/log/fastapi_ugc/
+
+  fastapi_ws:
+    build:
+      context: ./fastapi_ws
+      dockerfile: Dockerfile
+    container_name: ws_1
+    ports:
+      - "8090:8090"
+    restart: unless-stopped
+    env_file:
+      - .env
+    depends_on:
+      rabbitmq:
+        condition: service_healthy
+      fastapi_auth1:
+        condition: service_started
+      redis:
+        condition: service_started
+      theatre-db:
+        condition: service_started
+    volumes:
+      - ./static:/app/static
+      - /tmp/logs/fastapi_ws/:/var/log/fastapi_ws/
+
+  fastapi_recom:
+    build:
+      context: ./fastapi_recom
+      dockerfile: Dockerfile
+    container_name: fastapi_recom
+    ports:
+      - "8050:8050"
+    env_file:
+      - .env
+    depends_on:
+      rabbitmq:
+        condition: service_healthy
+      redis:
+        condition: service_started
+      theatre-db:
+        condition: service_started
+    volumes:
+      - /tmp/logs/fastapi_recom/:/var/log/fastapi_recom/
+
+  grpc_auth:
+    build:
+      context: ./fastapi_auth
+      dockerfile: Dockerfile
+    container_name: grpc_auth
+    command: >
+      bash -c "cd /opt/app && python -m src.auth_server.grpc.grpc_server_entrypoint"
+    ports:
+      - "50051:50051"
+    env_file:
+      - .env
+    depends_on:
+      - redis
+      - theatre-db
+      - jaeger
+    volumes:
+      - ./fastapi_auth:/opt/app
+      - /tmp/logs/fastapi_auth/:/var/log/fastapi_auth/
+
+  redis:
+    image: redislabs/redismod:latest
+    container_name: redis
+    expose:
+      - "6379"
+    restart: always
+    volumes:
+      - redis_data:/data
+
+  nginx:
+    image: nginx:latest
+    container_name: nginx
+    volumes:
+      - /tmp/logs/nginx/:/var/log/nginx/
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./nginx/configs:/etc/nginx/conf.d:ro
+    depends_on:
+      - fastapi1
+      - fastapi2
+      - fastapi_auth1
+      - fastapi_auth2
+      - fastapi_ugc
+      - fastapi_ws
+      - fastapi_recom
+    ports:
+      - "80:80"
+
+  theatre-db:
+    image: postgres:16
+    container_name: theatre-db
+    ports:
+      - "5432:5432"
+    env_file:
+      - .env
+    restart: always
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./postgres/init.sql:/docker-entrypoint-initdb.d/init.sql
+
+  ugc_mongo_db:
+      image: mongo
+      env_file:
+        - .env
+      restart: always
+      volumes:
+        - ./fastapi_ugc/mongo:/docker-entrypoint-initdb.d
+      ports:
+        - "27017:27017"
+
+  rabbitmq:
+    image: rabbitmq:4.0.7-management
+    container_name: rabbitmq
+    ports:
+      - "${RABBITMQ_PORT}:${RABBITMQ_PORT}"
+      - "15672:15672"
+    env_file:
+      - .env
+    healthcheck:
+      test: rabbitmq-diagnostics -q ping
+      interval: 10s
+      timeout: 10s
+      retries: 5
+    volumes:
+      - ./deploy/rabbitmq/rabbitmq.conf:/etc/rabbitmq/rabbitmq.conf:ro
+      - ./deploy/rabbitmq/definitions.json:/etc/rabbitmq/definitions.json:ro
+      - rabbitmq_data:/var/lib/rabbitmq
+
+
+  mail-service:
+    build:
+      context: ./mail
+      dockerfile: Dockerfile
+    container_name: mail-service
+    env_file:
+      - .env
+    depends_on:
+      rabbitmq:
+        condition: service_healthy
+    volumes:
+      - ./mail:/app
+
+  mailpit:
+    image: axllent/mailpit
+    ports:
+      - "1025:1025"   # SMTP
+      - "8025:8025"   # Web UI
+
+  jaeger:
+    image: jaegertracing/all-in-one:latest
+    container_name: jaeger
+    ports:
+      - "14268:14268"
+      - "16686:16686"
+
+  logstash:
+    image: logstash:8.10.2
+    depends_on:
+      - elkelasticsearch
+    env_file:
+      - .env
+    ports:
+      - "5044:5044/udp"
+    volumes:
+      - /tmp/logs/nginx/:/var/log/nginx/:ro
+      - /tmp/logs/fastapi/:/var/log/fastapi/:ro
+      - /tmp/logs/fastapi_auth/:/var/log/fastapi_auth/:ro
+      - ./deploy/logstash.conf:/config/logstash.conf:ro
+    command: logstash -f /config/logstash.conf
+    links:
+      - elkelasticsearch
+
+  sentry-api:
+    image: sentry:latest
+    env_file:
+      - .env
+    depends_on:
+      - theatre-db
+      - redis
+    ports:
+      - "9010:9000"
+
+  sentry-worker:
+    image: sentry:latest
+    env_file:
+      - .env
+    depends_on:
+      - theatre-db
+      - redis
+    command: sentry run worker
+
+  sentry-cron:
+    image: sentry:latest
+    env_file:
+      - .env
+    depends_on:
+      - theatre-db
+      - redis
+    command: sentry run cron
+
+  kibana:
+    image: kibana:8.10.2
+    ports:
+      - "5601:5601"
+    depends_on:
+      - elkelasticsearch
+    environment:
+      - ELASTICSEARCH_HOSTS=http://${ELK_ES_DSN}
+    links:
+      - elkelasticsearch
+
+  elasticsearch:
+    image: elasticsearch:8.7.0
+    container_name: elasticsearch
+    restart: always
+    volumes:
+      - elasticsearch:/usr/share/elasticsearch/data
+    environment:
+      - discovery.type=single-node
+      - xpack.security.enabled=false
+      - ES_JAVA_OPTS=-Xms200m -Xmx200m
+    depends_on:
+      - theatre-db
+    ports:
+      - "9200:9200"
+
+  elkelasticsearch:
+    image: elasticsearch:8.10.2
+    environment:
+      - discovery.type=single-node
+      - ES_JAVA_OPTS=-Xms512m -Xmx512m
+      - xpack.security.enabled=false
+    ports:
+      - "9250:9200"
+    volumes:
+      - elkelasticsearch:/usr/share/elasticsearch/data
+
+  filebeat:
+    image: elastic/filebeat:8.10.2
+    volumes:
+      - /tmp/logs/nginx/:/var/log/nginx:ro
+      - /tmp/logs/fastapi/:/var/log/fastapi/:ro
+      - /tmp/logs/fastapi_auth/:/var/log/fastapi_auth/:ro
+      - ./deploy/filebeat.yml:/usr/share/filebeat/filebeat.yml:ro
+    command: filebeat -e -strict.perms=false
+    env_file:
+      - .env
+    depends_on:
+      - nginx
+      - logstash
+      - elkelasticsearch
+      - kibana
+
+  etl:
+    build:
+      context: ./elastic
+      dockerfile: Dockerfile
+    container_name: etl
+    restart: always
+    env_file:
+      - .env
+    depends_on:
+      - theatre-db
+      - elasticsearch
+      - redis
+
+  clickhouse_etl:
+    container_name: clickhouse_etl
+    build:
+        context: ./clickhouse
+        dockerfile: Dockerfile
+    env_file:
+        - .env
+    depends_on:
+        - clickhouse-node1
+        - clickhouse-node2
+        - clickhouse-node3
+        - clickhouse-node4
+
+  zookeeper:
+    image: zookeeper:3.8
+    container_name: zookeeper
+    hostname: zookeeper
+
+  clickhouse-node1:
+    image: clickhouse/clickhouse-server:23
+    container_name: clickhouse-node1
+    hostname: clickhouse-node1
+    ports:
+      - "8123:8123"
+      - "9000:9000"
+    volumes:
+      - ./clickhouse/data/node1:/etc/clickhouse-server
+      - ./clickhouse/database/init.sql:/docker-entrypoint-initdb.d/init.sql
+    depends_on:
+      - zookeeper
+
+  clickhouse-node2:
+    image: clickhouse/clickhouse-server:23
+    container_name: clickhouse-node2
+    hostname: clickhouse-node2
+    ports:
+      - "8124:8123"
+      - "9001:9000"
+    volumes:
+      - ./clickhouse/data/node2:/etc/clickhouse-server
+      - ./clickhouse/database/init.sql:/docker-entrypoint-initdb.d/init.sql
+    depends_on:
+      - zookeeper
+
+  clickhouse-node3:
+    image: clickhouse/clickhouse-server:23
+    container_name: clickhouse-node3
+    hostname: clickhouse-node3
+    ports:
+      - "8125:8123"
+      - "9002:9000"
+    volumes:
+      - ./clickhouse/data/node3:/etc/clickhouse-server
+      - ./clickhouse/database/init.sql:/docker-entrypoint-initdb.d/init.sql
+    depends_on:
+      - zookeeper
+
+  clickhouse-node4:
+    image: clickhouse/clickhouse-server:23
+    container_name: clickhouse-node4
+    hostname: clickhouse-node4
+    ports:
+      - "8126:8123"
+      - "9003:9000"
+    volumes:
+      - ./clickhouse/data/node4:/etc/clickhouse-server
+      - ./clickhouse/database/init.sql:/docker-entrypoint-initdb.d/init.sql
+    depends_on:
+      - zookeeper
+
+  kafka-0:
+    image: bitnami/kafka:3.4
+    container_name: kafka-0
+    ports:
+      - "9094:9094"
+    environment:
+      - KAFKA_ENABLE_KRAFT=yes
+      - KAFKA_CFG_PROCESS_ROLES=broker,controller
+      - KAFKA_CFG_CONTROLLER_LISTENER_NAMES=CONTROLLER
+      - ALLOW_PLAINTEXT_LISTENER=yes
+      - KAFKA_CFG_NODE_ID=0
+      - KAFKA_CFG_BROKER_ID=0
+      - KAFKA_CFG_CONTROLLER_QUORUM_VOTERS=0@kafka-0:9093,1@kafka-1:9093,2@kafka-2:9093
+      - KAFKA_KRAFT_CLUSTER_ID=abcdefghijklmnopqrstuv
+      - KAFKA_CFG_LISTENERS=PLAINTEXT://:9092,CONTROLLER://:9093,EXTERNAL://:9094
+      - KAFKA_CFG_ADVERTISED_LISTENERS=PLAINTEXT://kafka-0:9092,EXTERNAL://127.0.0.1:9094
+      - KAFKA_CFG_LISTENER_SECURITY_PROTOCOL_MAP=CONTROLLER:PLAINTEXT,EXTERNAL:PLAINTEXT,PLAINTEXT:PLAINTEXT
+      - KAFKA_CREATE_TOPICS=moviesPAMAGITE:3:3
+      - KAFKA_CFG_NUM_PARTITIONS=3
+      - KAFKA_CFG_DEFAULT_REPLICATION_FACTOR=3
+      - KAFKA_CFG_MAX_MESSAGE_BYTES=52428800
+
+    volumes:
+      - kafka_0_data:/bitnami/kafka
+    depends_on:
+    - kafka-1
+    - kafka-2
+
+  kafka-1:
+    image: bitnami/kafka:3.4
+    container_name: kafka-1
+    ports:
+      - "9095:9095"
+    environment:
+      - KAFKA_ENABLE_KRAFT=yes
+      - ALLOW_PLAINTEXT_LISTENER=yes
+      - KAFKA_CFG_NODE_ID=1
+      - KAFKA_CFG_BROKER_ID=1
+      - KAFKA_CFG_PROCESS_ROLES=broker,controller
+      - KAFKA_CFG_CONTROLLER_LISTENER_NAMES=CONTROLLER
+      - KAFKA_CFG_CONTROLLER_QUORUM_VOTERS=0@kafka-0:9093,1@kafka-1:9093,2@kafka-2:9093
+      - KAFKA_KRAFT_CLUSTER_ID=abcdefghijklmnopqrstuv
+      - KAFKA_CFG_LISTENERS=PLAINTEXT://:9092,CONTROLLER://:9093,EXTERNAL://:9095
+      - KAFKA_CFG_ADVERTISED_LISTENERS=PLAINTEXT://kafka-1:9092,EXTERNAL://127.0.0.1:9095
+      - KAFKA_CFG_LISTENER_SECURITY_PROTOCOL_MAP=CONTROLLER:PLAINTEXT,EXTERNAL:PLAINTEXT,PLAINTEXT:PLAINTEXT
+
+    volumes:
+      - kafka_1_data:/bitnami/kafka
+    depends_on:
+    - kafka-2
+
+  kafka-2:
+    image: bitnami/kafka:3.4
+    container_name: kafka-2
+    ports:
+      - "9096:9096"
+    environment:
+      - KAFKA_ENABLE_KRAFT=yes
+      - ALLOW_PLAINTEXT_LISTENER=yes
+      - KAFKA_CFG_NODE_ID=2
+      - KAFKA_CFG_BROKER_ID=2
+      - KAFKA_CFG_PROCESS_ROLES=broker,controller
+      - KAFKA_CFG_CONTROLLER_LISTENER_NAMES=CONTROLLER
+      - KAFKA_CFG_CONTROLLER_QUORUM_VOTERS=0@kafka-0:9093,1@kafka-1:9093,2@kafka-2:9093
+      - KAFKA_KRAFT_CLUSTER_ID=abcdefghijklmnopqrstuv
+      - KAFKA_CFG_LISTENERS=PLAINTEXT://:9092,CONTROLLER://:9093,EXTERNAL://:9096
+      - KAFKA_CFG_ADVERTISED_LISTENERS=PLAINTEXT://kafka-2:9092,EXTERNAL://127.0.0.1:9096
+      - KAFKA_CFG_LISTENER_SECURITY_PROTOCOL_MAP=CONTROLLER:PLAINTEXT,EXTERNAL:PLAINTEXT,PLAINTEXT:PLAINTEXT
+    volumes:
+      - kafka_2_data:/bitnami/kafka
+
+  kafka-ui:
+    image: provectuslabs/kafka-ui:v0.7.0
+    container_name: kafka-ui
+    ports:
+      - "8050:8080"
+    environment:
+      - KAFKA_CLUSTERS_0_BOOTSTRAP_SERVERS=kafka-0:9092
+      - KAFKA_CLUSTERS_0_NAME=kraft
+
+volumes:
+  postgres_data:
+  elkelasticsearch:
+  redis_data:
+  rabbitmq_data:

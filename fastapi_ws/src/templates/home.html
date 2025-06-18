@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Вход в систему</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        .gradient-bg {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+    </style>
+</head>
+<body class="gradient-bg min-h-screen flex items-center justify-center p-4">
+    <div class="bg-white p-8 rounded-xl shadow-xl w-full max-w-md">
+        <h1 class="text-3xl font-bold mb-6 text-center">Авторизация</h1>
+
+        <!-- Админ панель -->
+        <div>
+            <h2 class="text-xl font-semibold mb-2">Вход в админпанель</h2>
+            <form id="adminLoginForm" class="space-y-3">
+                <input type="text" id="adminName" placeholder="Имя администратора" required
+                       class="w-full p-3 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none">
+                <input type="password" id="adminApiKey" placeholder="API ключ" required
+                       class="w-full p-3 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none">
+                <button type="submit"
+                        class="w-full bg-blue-600 text-white p-3 rounded-lg hover:bg-blue-700 transition-colors">
+                    Войти в админпанель
+                </button>
+            </form>
+        </div>
+
+        <hr class="my-6">
+
+        <!-- Вход по email -->
+        <div>
+            <h2 class="text-xl font-semibold mb-2">Вход в чат по email</h2>
+            <form id="emailLoginForm" class="space-y-3">
+                <input type="email" id="email" placeholder="Ваш email" required
+                       class="w-full p-3 border rounded-lg focus:ring-2 focus:ring-green-500 focus:outline-none">
+                <button type="submit"
+                        class="w-full bg-green-600 text-white p-3 rounded-lg hover:bg-green-700 transition-colors">
+                    Войти в чат
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        // Вход в админпанель
+        document.getElementById("adminLoginForm").addEventListener("submit", async function(e) {
+            e.preventDefault();
+            const name = document.getElementById("adminName").value.trim();
+            const apiKey = document.getElementById("adminApiKey").value.trim();
+
+            if (!name || !apiKey) {
+                alert("Пожалуйста, заполните все поля");
+                return;
+            }
+
+            try {
+                const response = await fetch("/ws/v1/chat/admin_login", {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/x-www-form-urlencoded",
+                        "X-API-Key": apiKey
+                    },
+                    body: `name=${encodeURIComponent(name)}&api_key=${encodeURIComponent(apiKey)}`
+                });
+
+                const data = await response.json();
+                if (data.success) {
+                    window.location.href = data.redirect_url;
+                } else {
+                    alert(data.error || "Ошибка входа в админпанель");
+                }
+            } catch (err) {
+                alert("Ошибка сети при входе в админпанель");
+                console.error(err);
+            }
+        });
+
+        // Вход по email
+        document.getElementById("emailLoginForm").addEventListener("submit", async function(e) {
+            e.preventDefault();
+            const email = document.getElementById("email").value.trim();
+
+            if (!email) {
+                alert("Введите email");
+                return;
+            }
+
+            try {
+                const response = await fetch("/ws/v1/chat/join_chat", {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/x-www-form-urlencoded"
+                    },
+                    body: `email=${encodeURIComponent(email)}`
+                });
+
+                const data = await response.json();
+                if (data.success) {
+                    const url = new URL(data.redirect_url, window.location.href);
+                    url.searchParams.set("email", email);
+                    window.location.href = url.toString();
+                } else {
+                    alert(data.error || "Ошибка входа по email");
+                }
+            } catch (err) {
+                alert("Ошибка сети при входе по email");
+                console.error(err);
+            }
+        });
+    </script>
+</body>
+</html>

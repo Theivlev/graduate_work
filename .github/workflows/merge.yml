@@ -1,0 +1,29 @@
+name: Main merge
+
+on:
+  pull_request:
+    branches: [main]
+    types:
+      - closed
+
+jobs:
+  telegram:
+    name: Send message
+    if: github.event.pull_request.merged == true
+    runs-on: ubuntu-latest
+    steps:
+      - name: Send message
+        uses: appleboy/telegram-action@master
+        with:
+          to: ${{ secrets.TELEGRAM_TO }}
+          token: ${{ secrets.TELEGRAM_TOKEN }}
+          format: html
+          message: |
+            📚<b>${{ github.repository }}</b>
+
+            🔀 Pull Request Merged!
+
+            🧷 <a href="${{ github.event.pull_request.html_url }}">${{ github.event.pull_request.title }} #${{ github.event.pull_request.number }}</a>
+            🧑‍💻 ${{ github.event.pull_request.user.login }}
+
+            <i>${{ github.event.pull_request.base.ref }}</i> &larr; <i>${{ github.event.pull_request.head.ref }}</i>

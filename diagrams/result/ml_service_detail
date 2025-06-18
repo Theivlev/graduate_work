@@ -1,0 +1,27 @@
+digraph ml_service {
+	fontsize=20 label="Участник 4: ML-движок и контекстные рекомендации" labelloc=t
+	subgraph cluster_ml_service_components {
+		color=lightgrey label="Компоненты" style="rounded,filled"
+		models [label="Модели
+        • DeepFM
+        • BERT
+        • RLlib" shape=box]
+		training [label="Обучение
+        • Optuna
+        • MLflow
+        • Feature Store" shape=box]
+		serving [label="Сервинг
+        • FastAPI
+        • Celery
+        • Redis" shape=cylinder]
+	}
+	subgraph cluster_ml_service_tech {
+		color=lightblue label="Технологии" style="rounded,filled"
+		TensorFlow [label=TensorFlow shape=plaintext]
+		PyTorch [label=PyTorch shape=plaintext]
+		"Аналог ML" [label="Аналог ML" shape=plaintext]
+	}
+	training -> models [label="Обученные модели" style=solid]
+	models -> serving [label="Предсказания" style=solid]
+	serving -> training [label="Метрики" style=dashed]
+}
