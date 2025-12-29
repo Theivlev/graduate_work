@@ -11,7 +11,6 @@
 ![Elasticsearch](https://img.shields.io/badge/Elasticsearch-8.8-green?logo=elasticsearch)
 ![JWT](https://img.shields.io/badge/JWT-authentication-yellow?logo=jsonwebtokens)
 
-
 ## 📚 Описание
 
 Рекомендательная система предназначена для подбора фильмов, которые могут заинтересовать пользователя. Она может использоваться для отображения рекомендаций на фронтенде или формирования персонализированных рассылок.
@@ -138,3 +137,4 @@ Alex Mishakovhttps://github.com/AlexMishakov
 Evgeny Kudryashov: https://github.com/
 
 Ivlev Alexey: https://github.com/Theivlev
+
